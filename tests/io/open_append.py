@@ -1,4 +1,7 @@
-import os
+try:
+    import uos as os
+except ImportError:
+    import os
 
 if not hasattr(os, "remove"):
     print("SKIP")

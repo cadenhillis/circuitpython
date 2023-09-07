@@ -17,16 +17,18 @@ NATMOD_EXAMPLE_DIR = "../examples/natmod/"
 
 # Supported tests and their corresponding mpy module
 TEST_MAPPINGS = {
+    "btree": "btree/btree_$(ARCH).mpy",
+    "framebuf": "framebuf/framebuf_$(ARCH).mpy",
     "uheapq": "uheapq/uheapq_$(ARCH).mpy",
     "urandom": "urandom/urandom_$(ARCH).mpy",
     "ure": "ure/ure_$(ARCH).mpy",
-    "zlib": "zlib/zlib_$(ARCH).mpy",
+    "uzlib": "uzlib/uzlib_$(ARCH).mpy",
 }
 
 # Code to allow a target MicroPython to import an .mpy from RAM
 injected_import_hook_code = """\
-import sys, os, io
-class __File(io.IOBase):
+import sys, uos, uio
+class __File(uio.IOBase):
   def __init__(self):
     self.off = 0
   def ioctl(self, request, arg):
@@ -47,8 +49,8 @@ class __FS:
       raise OSError(-2) # ENOENT
   def open(self, path, mode):
     return __File()
-os.mount(__FS(), '/__remote')
-os.chdir('/__remote')
+uos.mount(__FS(), '/__remote')
+uos.chdir('/__remote')
 sys.modules['{}'] = __import__('__injected')
 """
 

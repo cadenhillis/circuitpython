@@ -3,7 +3,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
+ * SPDX-FileCopyrightText: Copyright (c) 2013, 2014 Damien P. George
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +28,7 @@
 #include <assert.h>
 
 #include "py/bc0.h"
-#include "py/emitglue.h"
+#include "py/bc.h"
 
 #if MICROPY_DEBUG_PRINTERS
 
@@ -38,90 +38,80 @@
             unum = (unum << 7) + (*ip & 0x7f); \
         } while ((*ip++ & 0x80) != 0); \
 }
+#define DECODE_ULABEL do { unum = (ip[0] | (ip[1] << 8)); ip += 2; } while (0)
+#define DECODE_SLABEL do { unum = (ip[0] | (ip[1] << 8)) - 0x8000; ip += 2; } while (0)
 
-#define DECODE_ULABEL \
-    do { \
-        if (ip[0] & 0x80) { \
-            unum = ((ip[0] & 0x7f) | (ip[1] << 7)); \
-            ip += 2; \
-        } else { \
-            unum = ip[0]; \
-            ip += 1; \
-        } \
-    } while (0)
-
-#define DECODE_SLABEL \
-    do { \
-        if (ip[0] & 0x80) { \
-            unum = ((ip[0] & 0x7f) | (ip[1] << 7)) - 0x4000; \
-            ip += 2; \
-        } else { \
-            unum = ip[0] - 0x40; \
-            ip += 1; \
-        } \
-    } while (0)
-
-#if MICROPY_EMIT_BYTECODE_USES_QSTR_TABLE
+#if MICROPY_PERSISTENT_CODE
 
 #define DECODE_QSTR \
+    qst = ip[0] | ip[1] << 8; \
+    ip += 2;
+#define DECODE_PTR \
     DECODE_UINT; \
-    qst = qstr_table[unum]
+    unum = mp_showbc_const_table[unum]
+#define DECODE_OBJ \
+    DECODE_UINT; \
+    unum = mp_showbc_const_table[unum]
 
 #else
 
-#define DECODE_QSTR \
-    DECODE_UINT; \
-    qst = unum;
+#define DECODE_QSTR { \
+        qst = 0; \
+        do { \
+            qst = (qst << 7) + (*ip & 0x7f); \
+        } while ((*ip++ & 0x80) != 0); \
+}
+#define DECODE_PTR do { \
+        ip = (byte *)MP_ALIGN(ip, sizeof(void *)); \
+        unum = (uintptr_t)*(void **)ip; \
+        ip += sizeof(void *); \
+} while (0)
+#define DECODE_OBJ do { \
+        ip = (byte *)MP_ALIGN(ip, sizeof(mp_obj_t)); \
+        unum = (mp_uint_t)*(mp_obj_t *)ip; \
+        ip += sizeof(mp_obj_t); \
+} while (0)
 
 #endif
 
-#define DECODE_PTR \
-    DECODE_UINT; \
-    unum = (mp_uint_t)(uintptr_t)child_table[unum]
+const byte *mp_showbc_code_start;
+const mp_uint_t *mp_showbc_const_table;
 
-#define DECODE_OBJ \
-    DECODE_UINT; \
-    unum = (mp_uint_t)obj_table[unum]
-
-void mp_bytecode_print(const mp_print_t *print, const mp_raw_code_t *rc, const mp_module_constants_t *cm) {
-    const byte *ip_start = rc->fun_data;
-    const byte *ip = rc->fun_data;
+void mp_bytecode_print(const mp_print_t *print, const void *descr, const byte *ip, mp_uint_t len, const mp_uint_t *const_table) {
+    mp_showbc_code_start = ip;
 
     // Decode prelude
     MP_BC_PRELUDE_SIG_DECODE(ip);
     MP_BC_PRELUDE_SIZE_DECODE(ip);
     const byte *code_info = ip;
 
-    qstr block_name = mp_decode_uint(&code_info);
-    #if MICROPY_EMIT_BYTECODE_USES_QSTR_TABLE
-    block_name = cm->qstr_table[block_name];
-    qstr source_file = cm->qstr_table[0];
+    #if MICROPY_PERSISTENT_CODE
+    qstr block_name = code_info[0] | (code_info[1] << 8);
+    qstr source_file = code_info[2] | (code_info[3] << 8);
+    code_info += 4;
     #else
-    qstr source_file = cm->source_file;
+    qstr block_name = mp_decode_uint(&code_info);
+    qstr source_file = mp_decode_uint(&code_info);
     #endif
-    mp_printf(print, "File %s, code block '%s' (descriptor: %p, bytecode @%p %u bytes)\n",
-        qstr_str(source_file), qstr_str(block_name), rc, ip_start, (unsigned)rc->fun_data_len);
+    mp_printf(print, "File %s, code block '%s' (descriptor: %p, bytecode @%p " UINT_FMT " bytes)\n",
+        qstr_str(source_file), qstr_str(block_name), descr, mp_showbc_code_start, len);
 
     // raw bytecode dump
-    size_t prelude_size = ip - ip_start + n_info + n_cell;
+    size_t prelude_size = ip - mp_showbc_code_start + n_info + n_cell;
     mp_printf(print, "Raw bytecode (code_info_size=%u, bytecode_size=%u):\n",
-        (unsigned)prelude_size, (unsigned)(rc->fun_data_len - prelude_size));
-    for (size_t i = 0; i < rc->fun_data_len; i++) {
+        (unsigned)prelude_size, (unsigned)(len - prelude_size));
+    for (mp_uint_t i = 0; i < len; i++) {
         if (i > 0 && i % 16 == 0) {
             mp_printf(print, "\n");
         }
-        mp_printf(print, " %02x", ip_start[i]);
+        mp_printf(print, " %02x", mp_showbc_code_start[i]);
     }
     mp_printf(print, "\n");
 
     // bytecode prelude: arg names (as qstr objects)
     mp_printf(print, "arg names:");
     for (mp_uint_t i = 0; i < n_pos_args + n_kwonly_args; i++) {
-        qstr qst = mp_decode_uint(&code_info);
-        #if MICROPY_EMIT_BYTECODE_USES_QSTR_TABLE
-        qst = cm->qstr_table[qst];
-        #endif
-        mp_printf(print, " %s", qstr_str(qst));
+        mp_printf(print, " %s", qstr_str(MP_OBJ_QSTR_VALUE(const_table[i])));
     }
     mp_printf(print, "\n");
 
@@ -130,7 +120,6 @@ void mp_bytecode_print(const mp_print_t *print, const mp_raw_code_t *rc, const m
 
     // skip over code_info
     ip += n_info;
-    const byte *line_info_top = ip;
 
     // bytecode prelude: initialise closed over variables
     for (size_t i = 0; i < n_cell; ++i) {
@@ -143,7 +132,7 @@ void mp_bytecode_print(const mp_print_t *print, const mp_raw_code_t *rc, const m
         mp_int_t bc = 0;
         mp_uint_t source_line = 1;
         mp_printf(print, "  bc=" INT_FMT " line=" UINT_FMT "\n", bc, source_line);
-        for (const byte *ci = code_info; ci < line_info_top;) {
+        for (const byte *ci = code_info; *ci;) {
             if ((ci[0] & 0x80) == 0) {
                 // 0b0LLBBBBB encoding
                 bc += ci[0] & 0x1f;
@@ -158,14 +147,10 @@ void mp_bytecode_print(const mp_print_t *print, const mp_raw_code_t *rc, const m
             mp_printf(print, "  bc=" INT_FMT " line=" UINT_FMT "\n", bc, source_line);
         }
     }
-    mp_bytecode_print2(print, ip, rc->fun_data_len - prelude_size, rc->children, cm);
+    mp_bytecode_print2(print, ip, len - prelude_size, const_table);
 }
 
-const byte *mp_bytecode_print_str(const mp_print_t *print, const byte *ip_start, const byte *ip, mp_raw_code_t *const *child_table, const mp_module_constants_t *cm) {
-    #if MICROPY_EMIT_BYTECODE_USES_QSTR_TABLE
-    const qstr_short_t *qstr_table = cm->qstr_table;
-    #endif
-    const mp_obj_t *obj_table = cm->obj_table;
+const byte *mp_bytecode_print_str(const mp_print_t *print, const byte *ip) {
     mp_uint_t unum;
     qstr qst;
 
@@ -324,32 +309,32 @@ const byte *mp_bytecode_print_str(const mp_print_t *print, const byte *ip_start,
 
         case MP_BC_JUMP:
             DECODE_SLABEL;
-            mp_printf(print, "JUMP " UINT_FMT, (mp_uint_t)(ip + unum - ip_start));
+            mp_printf(print, "JUMP " UINT_FMT, (mp_uint_t)(ip + unum - mp_showbc_code_start));
             break;
 
         case MP_BC_POP_JUMP_IF_TRUE:
             DECODE_SLABEL;
-            mp_printf(print, "POP_JUMP_IF_TRUE " UINT_FMT, (mp_uint_t)(ip + unum - ip_start));
+            mp_printf(print, "POP_JUMP_IF_TRUE " UINT_FMT, (mp_uint_t)(ip + unum - mp_showbc_code_start));
             break;
 
         case MP_BC_POP_JUMP_IF_FALSE:
             DECODE_SLABEL;
-            mp_printf(print, "POP_JUMP_IF_FALSE " UINT_FMT, (mp_uint_t)(ip + unum - ip_start));
+            mp_printf(print, "POP_JUMP_IF_FALSE " UINT_FMT, (mp_uint_t)(ip + unum - mp_showbc_code_start));
             break;
 
         case MP_BC_JUMP_IF_TRUE_OR_POP:
-            DECODE_ULABEL;
-            mp_printf(print, "JUMP_IF_TRUE_OR_POP " UINT_FMT, (mp_uint_t)(ip + unum - ip_start));
+            DECODE_SLABEL;
+            mp_printf(print, "JUMP_IF_TRUE_OR_POP " UINT_FMT, (mp_uint_t)(ip + unum - mp_showbc_code_start));
             break;
 
         case MP_BC_JUMP_IF_FALSE_OR_POP:
-            DECODE_ULABEL;
-            mp_printf(print, "JUMP_IF_FALSE_OR_POP " UINT_FMT, (mp_uint_t)(ip + unum - ip_start));
+            DECODE_SLABEL;
+            mp_printf(print, "JUMP_IF_FALSE_OR_POP " UINT_FMT, (mp_uint_t)(ip + unum - mp_showbc_code_start));
             break;
 
         case MP_BC_SETUP_WITH:
             DECODE_ULABEL; // loop-like labels are always forward
-            mp_printf(print, "SETUP_WITH " UINT_FMT, (mp_uint_t)(ip + unum - ip_start));
+            mp_printf(print, "SETUP_WITH " UINT_FMT, (mp_uint_t)(ip + unum - mp_showbc_code_start));
             break;
 
         case MP_BC_WITH_CLEANUP:
@@ -358,18 +343,18 @@ const byte *mp_bytecode_print_str(const mp_print_t *print, const byte *ip_start,
 
         case MP_BC_UNWIND_JUMP:
             DECODE_SLABEL;
-            mp_printf(print, "UNWIND_JUMP " UINT_FMT " %d", (mp_uint_t)(ip + unum - ip_start), *ip);
+            mp_printf(print, "UNWIND_JUMP " UINT_FMT " %d", (mp_uint_t)(ip + unum - mp_showbc_code_start), *ip);
             ip += 1;
             break;
 
         case MP_BC_SETUP_EXCEPT:
             DECODE_ULABEL; // except labels are always forward
-            mp_printf(print, "SETUP_EXCEPT " UINT_FMT, (mp_uint_t)(ip + unum - ip_start));
+            mp_printf(print, "SETUP_EXCEPT " UINT_FMT, (mp_uint_t)(ip + unum - mp_showbc_code_start));
             break;
 
         case MP_BC_SETUP_FINALLY:
             DECODE_ULABEL; // except labels are always forward
-            mp_printf(print, "SETUP_FINALLY " UINT_FMT, (mp_uint_t)(ip + unum - ip_start));
+            mp_printf(print, "SETUP_FINALLY " UINT_FMT, (mp_uint_t)(ip + unum - mp_showbc_code_start));
             break;
 
         case MP_BC_END_FINALLY:
@@ -390,12 +375,12 @@ const byte *mp_bytecode_print_str(const mp_print_t *print, const byte *ip_start,
 
         case MP_BC_FOR_ITER:
             DECODE_ULABEL; // the jump offset if iteration finishes; for labels are always forward
-            mp_printf(print, "FOR_ITER " UINT_FMT, (mp_uint_t)(ip + unum - ip_start));
+            mp_printf(print, "FOR_ITER " UINT_FMT, (mp_uint_t)(ip + unum - mp_showbc_code_start));
             break;
 
         case MP_BC_POP_EXCEPT_JUMP:
             DECODE_ULABEL; // these labels are always forward
-            mp_printf(print, "POP_EXCEPT_JUMP " UINT_FMT, (mp_uint_t)(ip + unum - ip_start));
+            mp_printf(print, "POP_EXCEPT_JUMP " UINT_FMT, (mp_uint_t)(ip + unum - mp_showbc_code_start));
             break;
 
         case MP_BC_BUILD_TUPLE:
@@ -550,11 +535,12 @@ const byte *mp_bytecode_print_str(const mp_print_t *print, const byte *ip_start,
     return ip;
 }
 
-void mp_bytecode_print2(const mp_print_t *print, const byte *ip, size_t len, mp_raw_code_t *const *child_table, const mp_module_constants_t *cm) {
-    const byte *ip_start = ip;
-    while (ip < ip_start + len) {
-        mp_printf(print, "%02u ", (uint)(ip - ip_start));
-        ip = mp_bytecode_print_str(print, ip_start, ip, child_table, cm);
+void mp_bytecode_print2(const mp_print_t *print, const byte *ip, size_t len, const mp_uint_t *const_table) {
+    mp_showbc_code_start = ip;
+    mp_showbc_const_table = const_table;
+    while (ip < len + mp_showbc_code_start) {
+        mp_printf(print, "%02u ", (uint)(ip - mp_showbc_code_start));
+        ip = mp_bytecode_print_str(print, ip);
         mp_printf(print, "\n");
     }
 }

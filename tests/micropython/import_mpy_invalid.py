@@ -1,16 +1,16 @@
 # test importing of invalid .mpy files
 
 try:
-    import sys, io, os
+    import sys, uio, uos
 
-    io.IOBase
-    os.mount
+    uio.IOBase
+    uos.mount
 except (ImportError, AttributeError):
     print("SKIP")
     raise SystemExit
 
 
-class UserFile(io.IOBase):
+class UserFile(uio.IOBase):
     def __init__(self, data):
         self.data = memoryview(data)
         self.pos = 0
@@ -50,12 +50,13 @@ class UserFS:
 # these are the test .mpy files
 user_files = {
     "/mod0.mpy": b"",  # empty file
-    "/mod1.mpy": b"C",  # too short header
-    "/mod2.mpy": b"C\x00\x00\x00",  # bad version
+    "/mod1.mpy": b"M",  # too short header
+    "/mod2.mpy": b"M\x00\x00\x00",  # bad version
+    "/mod3.mpy": b"M\x00\x00\x00\x7f",  # qstr window too large
 }
 
 # create and mount a user filesystem
-os.mount(UserFS(user_files), "/userfs")
+uos.mount(UserFS(user_files), "/userfs")
 sys.path.append("/userfs")
 
 # import .mpy files from the user filesystem
@@ -67,5 +68,5 @@ for i in range(len(user_files)):
         print(mod, type(e).__name__, e)
 
 # unmount and undo path addition
-os.umount("/userfs")
+uos.umount("/userfs")
 sys.path.pop()

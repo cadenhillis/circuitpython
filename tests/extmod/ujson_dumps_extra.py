@@ -1,9 +1,9 @@
-# test uPy json behaviour that's not valid in CPy
+# test uPy ujson behaviour that's not valid in CPy
 
 try:
-    import json
+    import ujson
 except ImportError:
     print("SKIP")
     raise SystemExit
 
-print(json.dumps(b"1234"))
+print(ujson.dumps(b"1234"))

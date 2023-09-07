@@ -10,16 +10,29 @@ QSPI_FLASH_FILESYSTEM = 1
 EXTERNAL_FLASH_DEVICES = "S25FL116K, S25FL216K, GD25Q16C"
 LONGINT_IMPL = MPZ
 
-CIRCUITPY__EVE = 1
-CIRCUITPY_FLOPPYIO = 0
+CIRCUITPY__EVE =1 
 CIRCUITPY_SYNTHIO = 0
 
-# We don't have room for the fonts for terminalio for certain languages,
-# so turn off terminalio, and if it's off and displayio is on,
-# force a clean build.
-# Note that we cannot test $(CIRCUITPY_DISPLAYIO) directly with an
-# ifeq, because it's not set yet.
-ifneq (,$(filter $(TRANSLATION),ja ko ru))
-CIRCUITPY_TERMINALIO = 0
-RELEASE_NEEDS_CLEAN_BUILD = $(CIRCUITPY_DISPLAYIO)
-endif
+CIRCUITPY_ULAB = 1
+CIRCUITPY_BINASCII = 1
+CIRCUITPY_SDCARDIO = 1
+CIRCUITPY_JSON = 1
+CIRCUITPY_MSGPACK = 1
+CIRCUITPY_ALARM = 1
+
+# Not needed
+CIRCUITPY_AUDIOBUSIO = 0
+CIRCUITPY_DISPLAYIO = 0
+CIRCUITPY_FRAMEBUFFERIO = 0
+CIRCUITPY_KEYPAD = 0
+CIRCUITPY_RGBMATRIX = 0
+CIRCUITPY_PS2IO = 0
+CIRCUITPY_BLEIO_HCI=0
+CIRCUITPY_BLEIO=0
+#FROZEN_MPY_DIRS += $(TOP)/frozen/frozen_test
+FROZEN_MPY_DIRS += $(TOP)/frozen/adcs
+#FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_LSM6DS
+FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_Register
+FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_NeoPixel
+FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_GPS
+FROZEN_MPY_DIRS += $(TOP)/frozen/pycubed_rfm9x

@@ -1,6 +1,6 @@
-import os
+import uos
 
-os.umount("/")
+uos.umount("/")
 
 
 class RAMBlockDevice:
@@ -32,8 +32,8 @@ class RAMBlockDevice:
 
 
 bdev = RAMBlockDevice(64)
-os.VfsFat.mkfs(bdev)
-os.mount(os.VfsFat(bdev), "/")
+uos.VfsFat.mkfs(bdev)
+uos.mount(uos.VfsFat(bdev), "/")
 
 content_good = b"""
 # comment
@@ -66,13 +66,11 @@ def run_test(key, content):
         f.write(content)
 
     try:
-        v = os.getenv(key)
+        v = uos.getenv(key)
         print(key, repr(v))
     except Exception as e:
         print(key, str(e))
 
-
-run_test("key", b"")
 
 for i in range(13):
     run_test(f"key{i}", content_good)
@@ -82,7 +80,7 @@ for i in range(13):
     run_test(f"key{i}", content_good)
 
 run_test(f"K", b"K = 7\r\n")
-print(os.getenv_int("K"))
+print(uos.getenv_int("K"))
 
 # Test value without trailing newline
 run_test(f"noeol", b"noeol=3")

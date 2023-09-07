@@ -218,7 +218,10 @@ class AES:
 ##################################################################
 # test code
 
-import time
+try:
+    import utime as time
+except ImportError:
+    import time
 import _thread
 
 
@@ -268,11 +271,7 @@ def thread_entry(n_loop):
 if __name__ == "__main__":
     import sys
 
-    if hasattr(sys, "settrace"):
-        # Builds with sys.settrace enabled are slow, so make the test short.
-        n_thread = 2
-        n_loop = 2
-    elif sys.platform == "rp2":
+    if sys.platform == "rp2":
         n_thread = 1
         n_loop = 2
     elif sys.platform in ("esp32", "pyboard"):

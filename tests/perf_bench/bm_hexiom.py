@@ -632,7 +632,10 @@ bm_params = {
 
 
 def bm_setup(params):
-    import io
+    try:
+        import uio as io
+    except ImportError:
+        import io
 
     loops, level, order, strategy = params
 

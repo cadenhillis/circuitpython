@@ -3,8 +3,8 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2013, 2014 Damien P. George
- * Copyright (c) 2014-2016 Paul Sokolovsky
+ * SPDX-FileCopyrightText: Copyright (c) 2013, 2014 Damien P. George
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2016 Paul Sokolovsky
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -71,7 +71,7 @@ typedef struct _mp_stream_p_t {
     MP_PROTOCOL_HEAD
     // On error, functions should return MP_STREAM_ERROR and fill in *errcode (values
     // are implementation-dependent, but will be exposed to user, e.g. via exception).
-    mp_uint_t (*read)(mp_obj_t obj, void *buf, mp_uint_t size, int *errcode);
+    mp_uint_t (*read)(mp_obj_t obj, void *buf, mp_uint_t size, int *errcode, int offset);
     mp_uint_t (*write)(mp_obj_t obj, const void *buf, mp_uint_t size, int *errcode);
     mp_uint_t (*ioctl)(mp_obj_t obj, mp_uint_t request, uintptr_t arg, int *errcode);
     mp_uint_t is_text : 1; // default is bytes, set this for text stream
@@ -113,9 +113,9 @@ mp_obj_t mp_stream_write(mp_obj_t self_in, const void *buf, size_t len, byte fla
 #define MP_STREAM_RW_READ  0
 #define MP_STREAM_RW_WRITE 2
 #define MP_STREAM_RW_ONCE  1
-mp_uint_t mp_stream_rw(mp_obj_t stream, void *buf, mp_uint_t size, int *errcode, byte flags);
-#define mp_stream_write_exactly(stream, buf, size, err) mp_stream_rw(stream, (byte *)buf, size, err, MP_STREAM_RW_WRITE)
-#define mp_stream_read_exactly(stream, buf, size, err) mp_stream_rw(stream, buf, size, err, MP_STREAM_RW_READ)
+mp_uint_t mp_stream_rw(mp_obj_t stream, void *buf, mp_uint_t size, int *errcode, byte flags, int offset);
+#define mp_stream_read_exactly(stream, buf, size, err, offset) mp_stream_rw(stream, buf, size, err, MP_STREAM_RW_READ, offset)
+#define mp_stream_read_exactly(stream, buf, size, err, offset) mp_stream_rw(stream, buf, size, err, MP_STREAM_RW_READ, offset)
 
 void mp_stream_write_adaptor(void *self, const char *buf, size_t len);
 mp_obj_t mp_stream_flush(mp_obj_t self);

@@ -332,20 +332,14 @@ MP_DEFINE_CONST_FUN_OBJ_1(wifi_radio_stop_station_obj, wifi_radio_stop_station);
 //|
 //|         **Limitations:** On Espressif, ``authmode`` with a non-empty password must include
 //|         `wifi.AuthMode.PSK`, and one or both of `wifi.AuthMode.WPA` and `wifi.AuthMode.WPA2`.
-//|         On Pi Pico W, ``authmode`` is ignored; it is always ``(wifi.AuthMode.WPA2, wifi.AuthMode.PSK)``
-//|         with a non-empty password, or ``(wifi.AuthMode.OPEN)``, when no password is given.
-//|         On Pi Pico W, the AP can be started and stopped only once per reboot.
+//|         On Pi Pico W, ``authmode`` is ignored; it is always ``(wifi.AuthMode.WPA2, wifi.AuthMode.PSK)`
+//|         with a non-empty password, or ``(wifi.AuthMode.OPEN,)`` when no password is given.
 //|
 //|         The length of ``password`` must be 8-63 characters if it is ASCII,
 //|         or exactly 64 hexadecimal characters if it is the hex form of the 256-bit key.
 //|
 //|         If ``max_connections`` is given, the access point will allow up to
-//|         that number of stations to connect.
-//|
-//|         .. note::
-//|
-//|             In the raspberrypi port (RP2040 CYW43), ``max_connections`` is ignored.
-//|         """
+//|         that number of stations to connect."""
 //|         ...
 STATIC mp_obj_t wifi_radio_start_ap(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     enum { ARG_ssid, ARG_password, ARG_channel, ARG_authmode, ARG_max_connections };
@@ -565,12 +559,7 @@ MP_PROPERTY_GETTER(wifi_radio_ipv4_subnet_ap_obj,
 //|         ipv4_dns: Optional[ipaddress.IPv4Address],
 //|     ) -> None:
 //|         """Sets the IP v4 address of the station. Must include the netmask and gateway. DNS address is optional.
-//|         Setting the address manually will stop the DHCP client.
-//|
-//|         .. note::
-//|
-//|             In the raspberrypi port (RP2040 CYW43), the access point needs to be started before the IP v4 address can be set.
-//|         """
+//|         Setting the address manually will stop the DHCP client."""
 //|         ...
 STATIC mp_obj_t wifi_radio_set_ipv4_address(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     enum { ARG_ipv4, ARG_netmask, ARG_gateway, ARG_ipv4_dns };
@@ -627,7 +616,7 @@ MP_PROPERTY_GETTER(wifi_radio_ipv4_address_obj,
     (mp_obj_t)&wifi_radio_get_ipv4_address_obj);
 
 //|     ipv4_address_ap: Optional[ipaddress.IPv4Address]
-//|     """IP v4 Address of the access point, when enabled. None otherwise. (read-only)"""
+//|     """IP v4 Address of the access point, when enabled. None otherwise."""
 STATIC mp_obj_t wifi_radio_get_ipv4_address_ap(mp_obj_t self) {
     return common_hal_wifi_radio_get_ipv4_address_ap(self);
 }

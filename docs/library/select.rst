@@ -1,6 +1,8 @@
 :mod:`select` -- wait for events on a set of streams
 ====================================================
 
+.. include:: ../templates/unsupported_in_circuitpython.inc
+
 .. module:: select
    :synopsis: wait for events on a set of streams
 
@@ -84,7 +86,7 @@ Methods
 .. method:: poll.ipoll(timeout=-1, flags=0, /)
 
    Like :meth:`poll.poll`, but instead returns an iterator which yields a
-   "callee-owned tuple". This function provides an efficient, allocation-free
+   ``callee-owned tuples``. This function provides efficient, allocation-free
    way to poll on streams.
 
    If *flags* is 1, one-shot behaviour for events is employed: streams for

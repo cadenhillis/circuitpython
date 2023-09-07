@@ -59,7 +59,8 @@ STATIC mp_obj_t deque_make_new(const mp_obj_type_t *type, size_t n_args, size_t 
         mp_raise_ValueError(NULL);
     }
 
-    mp_obj_deque_t *o = mp_obj_malloc(mp_obj_deque_t, type);
+    mp_obj_deque_t *o = m_new_obj(mp_obj_deque_t);
+    o->base.type = type;
     o->alloc = maxlen + 1;
     o->i_get = o->i_put = 0;
     o->items = m_new0(mp_obj_t, o->alloc);

@@ -13,4 +13,4 @@ package
 hello from lfs
 lfsmod2.py: print("hello from lfs")
 
-OSError(30,)
+OSError(36,)

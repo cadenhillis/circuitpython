@@ -7,10 +7,13 @@ except (NameError, TypeError):
     raise SystemExit
 
 try:
-    import array
+    import uarray as array
 except ImportError:
-    print("SKIP")
-    raise SystemExit
+    try:
+        import array
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 # test slice assignment between memoryviews
 b1 = bytearray(b'1234')

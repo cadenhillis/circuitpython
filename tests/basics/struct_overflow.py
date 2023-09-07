@@ -2,10 +2,13 @@ import skip_if
 skip_if.no_bigint()
 
 try:
-    import struct
-except ImportError:
-    print("SKIP")
-    raise SystemExit
+    import ustruct as struct
+except:
+    try:
+        import struct
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 def test_struct_overflow(typecode, val):
     try:

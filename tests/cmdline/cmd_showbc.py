@@ -40,7 +40,7 @@ def f():
     # slice
     a = b[::]
 
-    # sequence unpacking
+    # sequenc unpacking
     a, b = c
     a, *a = a
 

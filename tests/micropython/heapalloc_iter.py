@@ -5,10 +5,13 @@ except NameError:
     print("SKIP")
     raise SystemExit
 try:
-    import array
+    import uarray as array
 except ImportError:
-    print("SKIP")
-    raise SystemExit
+    try:
+        import array
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 try:
     from micropython import heap_lock, heap_unlock

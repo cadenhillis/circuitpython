@@ -59,9 +59,7 @@ STATIC void traceback_exception_common(bool is_print_exception, mp_print_t *prin
     }
     mp_obj_t tb_obj = args[ARG_tb].u_obj;
     mp_obj_t limit_obj = args[ARG_limit].u_obj;
-    #if MICROPY_CPYTHON_EXCEPTION_CHAIN
     bool chain = args[ARG_chain].u_bool;
-    #endif
 
     if (args[ARG_file].u_obj != mp_const_none) {
         if (!is_print_exception) {
@@ -218,4 +216,4 @@ const mp_obj_module_t traceback_module = {
     .globals = (mp_obj_dict_t *)&traceback_module_globals,
 };
 
-MP_REGISTER_MODULE(MP_QSTR_traceback, traceback_module);
+MP_REGISTER_MODULE(MP_QSTR_traceback, traceback_module, CIRCUITPY_TRACEBACK);

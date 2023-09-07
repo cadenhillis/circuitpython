@@ -3,16 +3,10 @@
 def foo(a, b, c):
     print(a, b, c)
 
-foo(*(), 1, 2, 3)
-foo(*(1,), 2, 3)
-foo(*(1, 2), 3)
 foo(*(1, 2, 3))
 foo(1, *(2, 3))
 foo(1, 2, *(3,))
 foo(1, 2, 3, *())
-foo(*(1,), 2, *(3,))
-foo(*(1, 2), *(3,))
-foo(*(1,), *(2, 3))
 
 # Another sequence type
 foo(1, 2, *[100])
@@ -35,16 +29,10 @@ class A:
         print(a, b, c)
 
 a = A()
-a.foo(*(), 1, 2, 3)
-a.foo(*(1,), 2, 3)
-a.foo(*(1, 2), 3)
 a.foo(*(1, 2, 3))
 a.foo(1, *(2, 3))
 a.foo(1, 2, *(3,))
 a.foo(1, 2, 3, *())
-a.foo(*(1,), 2, *(3,))
-a.foo(*(1, 2), *(3,))
-a.foo(*(1,), *(2, 3))
 
 # Another sequence type
 a.foo(1, 2, *[100])

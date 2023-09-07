@@ -4,7 +4,7 @@ import micropython
 import sys
 
 try:
-    import io
+    import uio
 except ImportError:
     print("SKIP")
     raise SystemExit

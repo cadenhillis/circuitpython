@@ -1,4 +1,4 @@
-The MIT License (MIT)
+MIT License
 
 Copyright (c) 2013-2022 Damien P. George and others
 

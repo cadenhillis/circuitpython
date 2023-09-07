@@ -1,21 +1,13 @@
 # Test asyncio.wait_for, with forwarding cancellation
 
 try:
-    import asyncio
+    import uasyncio as asyncio
 except ImportError:
-    print("SKIP")
-    raise SystemExit
-
-
-async def foo():
-    return 42
-
-
-try:
-    foo().__await__
-except AttributeError:
-    print("SKIP")
-    raise SystemExit
+    try:
+        import asyncio
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 
 async def awaiting(t, return_if_fail):

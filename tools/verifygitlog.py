@@ -69,8 +69,7 @@ def verify(sha):
 
     # Message body lines.
     for line in raw_body[2:]:
-        # Long lines with URLs are exempt from the line length rule.
-        if len(line) >= 76 and "://" not in line:
+        if len(line) >= 76:
             error("Message lines should be 75 or less characters: " + line)
 
     if not raw_body[-1].startswith("Signed-off-by: ") or "@" not in raw_body[-1]:

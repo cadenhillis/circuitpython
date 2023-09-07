@@ -1,21 +1,21 @@
 # test VFS functionality with a user-defined filesystem
-# also tests parts of io.IOBase implementation
+# also tests parts of uio.IOBase implementation
 
 import sys
 
 try:
-    import io
+    import uio
 
-    io.IOBase
-    import os
+    uio.IOBase
+    import uos
 
-    os.mount
+    uos.mount
 except (ImportError, AttributeError):
     print("SKIP")
     raise SystemExit
 
 
-class UserFile(io.IOBase):
+class UserFile(uio.IOBase):
     def __init__(self, mode, data):
         assert isinstance(data, bytes)
         self.is_text = mode.find("b") == -1
@@ -69,7 +69,7 @@ user_files = {
     "/usermod1.py": b"print('in usermod1')\nimport usermod2",
     "/usermod2.py": b"print('in usermod2')",
 }
-os.mount(UserFS(user_files), "/userfs")
+uos.mount(UserFS(user_files), "/userfs")
 
 # open and read a file
 f = open("/userfs/data.txt")
@@ -80,5 +80,5 @@ sys.path.append("/userfs")
 import usermod1
 
 # unmount and undo path addition
-os.umount("/userfs")
+uos.umount("/userfs")
 sys.path.pop()

@@ -1,8 +1,11 @@
 try:
-    import random
+    import urandom as random
 except ImportError:
-    print("SKIP")
-    raise SystemExit
+    try:
+        import random
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 try:
     random.randint

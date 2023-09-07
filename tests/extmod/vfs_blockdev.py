@@ -1,10 +1,10 @@
 # Test for behaviour of combined standard and extended block device
 
 try:
-    import os
+    import uos
 
-    os.VfsFat
-    os.VfsLfs2
+    uos.VfsFat
+    uos.VfsLfs2
 except (ImportError, AttributeError):
     print("SKIP")
     raise SystemExit
@@ -70,5 +70,5 @@ except MemoryError:
     print("SKIP")
     raise SystemExit
 
-test(bdev, os.VfsFat)
-test(bdev, os.VfsLfs2)
+test(bdev, uos.VfsFat)
+test(bdev, uos.VfsLfs2)

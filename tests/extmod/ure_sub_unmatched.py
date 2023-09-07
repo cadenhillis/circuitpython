@@ -1,10 +1,13 @@
 # test re.sub with unmatched groups, behaviour changed in CPython 3.5
 
 try:
-    import re
+    import ure as re
 except ImportError:
-    print("SKIP")
-    raise SystemExit
+    try:
+        import re
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 try:
     re.sub

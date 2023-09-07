@@ -53,7 +53,7 @@ extern bool common_hal_busio_uart_deinited(busio_uart_obj_t *self);
 
 // Read characters. len is in characters NOT bytes!
 extern size_t common_hal_busio_uart_read(busio_uart_obj_t *self,
-    uint8_t *data, size_t len, int *errcode);
+    uint8_t *data, size_t len, int *errcode, int offset);
 
 // Write characters. len is in characters NOT bytes!
 extern size_t common_hal_busio_uart_write(busio_uart_obj_t *self,

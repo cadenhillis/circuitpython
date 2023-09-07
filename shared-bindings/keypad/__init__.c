@@ -89,8 +89,6 @@ const mp_obj_property_t keypad_generic_events_obj = {
 //|
 //| For more information about working with the `keypad` module in CircuitPython,
 //| see `this Learn guide <https://learn.adafruit.com/key-pad-matrix-scanning-in-circuitpython>`_.
-//|
-//| .. jinja
 //| """
 
 STATIC mp_rom_map_elem_t keypad_module_globals_table[] = {
@@ -109,4 +107,4 @@ const mp_obj_module_t keypad_module = {
     .globals = (mp_obj_dict_t *)&keypad_module_globals,
 };
 
-MP_REGISTER_MODULE(MP_QSTR_keypad, keypad_module);
+MP_REGISTER_MODULE(MP_QSTR_keypad, keypad_module, CIRCUITPY_KEYPAD);

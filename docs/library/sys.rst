@@ -1,10 +1,12 @@
 :mod:`sys` -- system specific functions
-=======================================
+========================================
+
+.. include:: ../templates/unsupported_in_circuitpython.inc
 
 .. module:: sys
    :synopsis: system specific functions
 
-|see_cpython_module| :mod:`python:sys`.
+|see_cpython_module| :mod:`cpython:sys`.
 
 Functions
 ---------
@@ -33,7 +35,6 @@ Constants
 
    * *name* - string "circuitpython"
    * *version* - tuple (major, minor, micro), e.g. (1, 7, 0)
-   * *_mpy* - supported mpy file-format version (optional attribute)
 
    This object is the recommended way to distinguish CircuitPython from other
    Python implementations (note that it still may not exist in the very
@@ -96,12 +97,6 @@ Constants
    If you need to check whether your program runs on CircuitPython (vs other
    Python implementation), use `sys.implementation` instead.
 
-.. data:: ps1
-          ps2
-
-   Mutable attributes holding strings, which are used for the REPL prompt.  The defaults
-   give the standard Python prompt of ``>>>`` and ``...``.
-
 .. data:: stderr
 
    Standard error ``stream``.
@@ -113,14 +108,6 @@ Constants
 .. data:: stdout
 
    Standard output ``stream``.
-
-.. data:: tracebacklimit
-
-   A mutable attribute holding an integer value which is the maximum number of traceback
-   entries to store in an exception.  Set to 0 to disable adding tracebacks.  Defaults
-   to 1000.
-
-   Note: this is not available on all ports.
 
 .. data:: version
 

@@ -25,14 +25,13 @@
  */
 
 #include "supervisor/shared/translate/translate.h"
-#include "py/qstr.h"
 
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
 #ifndef NO_QSTR
-#include "genhdr/compressed_translations.generated.h"
+#include "genhdr/compression.generated.h"
 #endif
 
 #include "py/misc.h"
@@ -100,34 +99,10 @@ uint16_t decompress_length(const compressed_string_t *compressed) {
     #endif
 }
 
-typedef struct {
-    const uint8_t *ptr;
-    uint8_t bit;
-} bitstream_state_t;
-
-static bool next_bit(bitstream_state_t *st) {
-    bool r = *st->ptr & st->bit;
-    st->bit >>= 1;
-    if (!st->bit) {
-        st->bit = 0x80;
-        st->ptr++;
-    }
-    return r;
-}
-
-static int get_nbits(bitstream_state_t *st, int n) {
-    int r = 0;
-    while (n--) {
-        r = (r << 1) | next_bit(st);
-    }
-    return r;
-}
-
 char *decompress(const compressed_string_t *compressed, char *decompressed) {
-    bitstream_state_t b = {
-        .ptr = &(compressed->data) + (compress_max_length_bits >> 3),
-        .bit = 1 << (7 - ((compress_max_length_bits) & 0x7)),
-    };
+    uint8_t this_byte = compress_max_length_bits / 8;
+    uint8_t this_bit = 7 - compress_max_length_bits % 8;
+    uint8_t b = (&compressed->data)[this_byte] << (compress_max_length_bits % 8);
     uint16_t length = decompress_length(compressed);
 
     // Stop one early because the last byte is always NULL.
@@ -137,23 +112,26 @@ char *decompress(const compressed_string_t *compressed, char *decompressed) {
         uint32_t max_code = lengths[0];
         uint32_t searched_length = lengths[0];
         while (true) {
-            bits = (bits << 1) | next_bit(&b);
+            bits <<= 1;
+            if ((0x80 & b) != 0) {
+                bits |= 1;
+            }
+            b <<= 1;
             bit_length += 1;
+            if (this_bit == 0) {
+                this_bit = 7;
+                this_byte += 1;
+                b = (&compressed->data)[this_byte]; // This may read past the end but its never used.
+            } else {
+                this_bit -= 1;
+            }
             if (max_code > 0 && bits < max_code) {
                 break;
             }
             max_code = (max_code << 1) + lengths[bit_length];
             searched_length += lengths[bit_length];
         }
-        int v = values[searched_length + bits - max_code];
-        if (v == 1) {
-            qstr q = get_nbits(&b, translation_qstr_bits) + 1; // honestly no idea why "+1"...
-            for (const char *qc = qstr_str(q); *qc;) {
-                decompressed[i++] = *qc++;
-            }
-        } else {
-            i += put_utf8(decompressed + i, v);
-        }
+        i += put_utf8(decompressed + i, values[searched_length + bits - max_code]);
     }
 
     decompressed[length - 1] = '\0';

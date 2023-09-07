@@ -1,10 +1,13 @@
 # test urandom.seed() without any arguments
 
 try:
-    import random
+    import urandom as random
 except ImportError:
-    print("SKIP")
-    raise SystemExit
+    try:
+        import random
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 try:
     random.seed()

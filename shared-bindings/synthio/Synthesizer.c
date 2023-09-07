@@ -31,7 +31,6 @@
 #include "py/binary.h"
 #include "py/objproperty.h"
 #include "py/runtime.h"
-#include "py/enum.h"
 #include "shared-bindings/util.h"
 #include "shared-bindings/synthio/Biquad.h"
 #include "shared-bindings/synthio/Synthesizer.h"
@@ -79,7 +78,8 @@ STATIC mp_obj_t synthio_synthesizer_make_new(const mp_obj_type_t *type, size_t n
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
 
-    synthio_synthesizer_obj_t *self = mp_obj_malloc(synthio_synthesizer_obj_t, &synthio_synthesizer_type);
+    synthio_synthesizer_obj_t *self = m_new_obj(synthio_synthesizer_obj_t);
+    self->base.type = &synthio_synthesizer_type;
 
     common_hal_synthio_synthesizer_construct(self,
         args[ARG_sample_rate].u_int,
@@ -256,9 +256,7 @@ MP_PROPERTY_GETTER(synthio_synthesizer_sample_rate_obj,
     (mp_obj_t)&synthio_synthesizer_get_sample_rate_obj);
 
 //|     pressed: NoteSequence
-//|     """A sequence of the currently pressed notes (read-only property).
-//|
-//|     This does not include notes in the release phase of the envelope."""
+//|     """A sequence of the currently pressed notes (read-only property)"""
 //|
 STATIC mp_obj_t synthio_synthesizer_obj_get_pressed(mp_obj_t self_in) {
     synthio_synthesizer_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -269,23 +267,6 @@ MP_DEFINE_CONST_FUN_OBJ_1(synthio_synthesizer_get_pressed_obj, synthio_synthesiz
 
 MP_PROPERTY_GETTER(synthio_synthesizer_pressed_obj,
     (mp_obj_t)&synthio_synthesizer_get_pressed_obj);
-
-//|     def note_info(self, note: Note) -> Tuple[Optional[EnvelopeState], float]:
-//|         """Get info about a note's current envelope state
-//|
-//|         If the note is currently playing (including in the release phase), the returned value gives the current envelope state and the current envelope value.
-//|
-//|         If the note is not playing on this synthesizer, returns the tuple ``(None, 0.0)``."""
-STATIC mp_obj_t synthio_synthesizer_obj_note_info(mp_obj_t self_in, mp_obj_t note) {
-    synthio_synthesizer_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    check_for_deinit(self);
-    mp_float_t vol = MICROPY_FLOAT_CONST(0.0);
-    envelope_state_e state = common_hal_synthio_synthesizer_note_info(self, note, &vol);
-    return MP_OBJ_NEW_TUPLE(
-        cp_enum_find(&synthio_note_state_type, state),
-        mp_obj_new_float(vol));
-}
-MP_DEFINE_CONST_FUN_OBJ_2(synthio_synthesizer_note_info_obj, synthio_synthesizer_obj_note_info);
 
 //|     blocks: List[BlockInput]
 //|     """A list of blocks to advance whether or not they are associated with a playing note.
@@ -436,7 +417,6 @@ STATIC const mp_rom_map_elem_t synthio_synthesizer_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_sample_rate), MP_ROM_PTR(&synthio_synthesizer_sample_rate_obj) },
     { MP_ROM_QSTR(MP_QSTR_max_polyphony), MP_ROM_INT(CIRCUITPY_SYNTHIO_MAX_CHANNELS) },
     { MP_ROM_QSTR(MP_QSTR_pressed), MP_ROM_PTR(&synthio_synthesizer_pressed_obj) },
-    { MP_ROM_QSTR(MP_QSTR_note_info), MP_ROM_PTR(&synthio_synthesizer_note_info_obj) },
     { MP_ROM_QSTR(MP_QSTR_blocks), MP_ROM_PTR(&synthio_synthesizer_blocks_obj) },
 };
 STATIC MP_DEFINE_CONST_DICT(synthio_synthesizer_locals_dict, synthio_synthesizer_locals_dict_table);

@@ -1,10 +1,13 @@
 # Test Event class
 
 try:
-    import asyncio
+    import uasyncio as asyncio
 except ImportError:
-    print("SKIP")
-    raise SystemExit
+    try:
+        import asyncio
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 
 async def task(id, ev):

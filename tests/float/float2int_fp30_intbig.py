@@ -1,6 +1,9 @@
 # check cases converting float to int, relying only on single precision float
 
-import struct
+try:
+    import ustruct as struct
+except:
+    import struct
 
 import sys
 

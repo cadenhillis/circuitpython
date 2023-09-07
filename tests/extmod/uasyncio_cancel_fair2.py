@@ -2,10 +2,13 @@
 # That tasks which keeps being cancelled by multiple other tasks gets a chance to run
 
 try:
-    import asyncio
+    import uasyncio as asyncio
 except ImportError:
-    print("SKIP")
-    raise SystemExit
+    try:
+        import asyncio
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 
 async def task_a():

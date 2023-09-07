@@ -1,13 +1,6 @@
 # Derived from code on Eric Holscher's blog, found at:
 # https://www.ericholscher.com/blog/2016/jul/25/integrating-jinja-rst-sphinx/
 
-import re
-
-def render_with_jinja(docname, source):
-    if re.search('^\s*.. jinja$', source[0], re.M):
-        return True
-    return False
-
 def rstjinja(app, docname, source):
     """
     Render our pages as a jinja template for fancy templating goodness.
@@ -16,12 +9,12 @@ def rstjinja(app, docname, source):
     if app.builder.format not in ("html", "latex"):
         return
 
-    # we only want specific files to run through this func
-    if not render_with_jinja(docname, source):
+    # we only want our one jinja template to run through this func
+    if "shared-bindings/support_matrix" not in docname:
         return
 
     src = rendered = source[0]
-    print(f"rendering {docname} as jinja templates")
+    print(docname)
 
     if app.builder.format == "html":
         rendered = app.builder.templates.render_string(

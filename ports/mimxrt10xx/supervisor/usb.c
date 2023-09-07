@@ -31,9 +31,7 @@
 #include "supervisor/linker.h"
 #include "supervisor/usb.h"
 
-#include "imx_usb.h"
-
-void init_usb_instance(mp_int_t instance) {
+STATIC void init_usb_instance(mp_int_t instance) {
     if (instance < 0) {
         return;
     }
@@ -74,6 +72,9 @@ void init_usb_instance(mp_int_t instance) {
 
     void init_usb_hardware(void) {
         init_usb_instance(CIRCUITPY_USB_DEVICE_INSTANCE);
+        // We can't dynamically start the USB Host port at the moment, so do it
+        // up front.
+        init_usb_instance(CIRCUITPY_USB_HOST_INSTANCE);
     }
 
 // Provide the prototypes for the interrupt handlers. The iMX RT SDK doesn't.

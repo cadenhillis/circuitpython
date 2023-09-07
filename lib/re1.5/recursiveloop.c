@@ -68,7 +68,7 @@ recursiveloop(char *pc, const char *sp, Subject *input, const char **subp, int n
 			subp[off] = old;
 			return 0;
 		case Bol:
-			if(sp != input->begin_line)
+			if(sp != input->begin)
 				return 0;
 			continue;
 		case Eol:

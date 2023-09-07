@@ -1,6 +1,9 @@
 # test struct package with floats
 try:
-    import struct
+    try:
+        import ustruct as struct
+    except:
+        import struct
 except ImportError:
     print("SKIP")
     raise SystemExit

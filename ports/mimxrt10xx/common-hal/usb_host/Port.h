@@ -31,8 +31,11 @@
 
 typedef struct {
     mp_obj_base_t base;
-    const mcu_pin_obj_t *dp;
-    const mcu_pin_obj_t *dm;
+    bool init;
 } usb_host_port_obj_t;
+
+// Cheater state so that the usb module knows if it should return the TinyUSB
+// state.
+extern bool usb_host_init;
 
 #endif // MICROPY_INCLUDED_MIMXRT10XX_COMMON_HAL_USB_HOST_PORT_H

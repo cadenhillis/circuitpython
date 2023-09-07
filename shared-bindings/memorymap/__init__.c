@@ -49,4 +49,4 @@ const mp_obj_module_t memorymap_module = {
     .globals = (mp_obj_dict_t *)&memorymap_module_globals,
 };
 
-MP_REGISTER_MODULE(MP_QSTR_memorymap, memorymap_module);
+MP_REGISTER_MODULE(MP_QSTR_memorymap, memorymap_module, CIRCUITPY_MEMORYMAP);

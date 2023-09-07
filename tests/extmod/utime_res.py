@@ -1,18 +1,18 @@
-# test time resolutions
+# test utime resolutions
 
 try:
-    import time
+    import utime
 except ImportError:
     print("SKIP")
     raise SystemExit
 
 
 def gmtime_time():
-    return time.gmtime(time.time())
+    return utime.gmtime(utime.time())
 
 
 def localtime_time():
-    return time.localtime(time.time())
+    return utime.localtime(utime.time())
 
 
 def test():
@@ -32,12 +32,12 @@ def test():
 
     # call time functions
     results_map = {}
-    end_time = time.ticks_ms() + TEST_TIME
-    while time.ticks_diff(end_time, time.ticks_ms()) > 0:
-        time.sleep_ms(100)
+    end_time = utime.ticks_ms() + TEST_TIME
+    while utime.ticks_diff(end_time, utime.ticks_ms()) > 0:
+        utime.sleep_ms(100)
         for func_name, _ in EXPECTED_MAP:
             try:
-                time_func = getattr(time, func_name, None) or globals()[func_name]
+                time_func = getattr(utime, func_name, None) or globals()[func_name]
                 now = time_func()  # may raise AttributeError
             except (KeyError, AttributeError):
                 continue

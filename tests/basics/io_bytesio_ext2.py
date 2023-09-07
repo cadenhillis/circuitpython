@@ -1,4 +1,7 @@
-import io
+try:
+    import uio as io
+except ImportError:
+    import io
 
 a = io.BytesIO(b"foobar")
 try:

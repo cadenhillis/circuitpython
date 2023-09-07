@@ -1,8 +1,11 @@
 try:
     import zlib
 except ImportError:
-    print("SKIP")
-    raise SystemExit
+    try:
+        import uzlib as zlib
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 PATTERNS = [
     # Packed results produced by CPy's zlib.compress()

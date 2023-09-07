@@ -57,7 +57,7 @@ STATIC void stdio_obj_print(const mp_print_t *print, mp_obj_t self_in, mp_print_
     mp_printf(print, "<io.FileIO %d>", self->fd);
 }
 
-STATIC mp_uint_t stdio_read(mp_obj_t self_in, void *buf, mp_uint_t size, int *errcode) {
+STATIC mp_uint_t stdio_read(mp_obj_t self_in, void *buf, mp_uint_t size, int *errcode,int offset) {
     sys_stdio_obj_t *self = MP_OBJ_TO_PTR(self_in);
     if (self->fd == STDIO_FD_IN) {
         for (uint i = 0; i < size; i++) {

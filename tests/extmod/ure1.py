@@ -1,8 +1,11 @@
 try:
-    import re
+    import ure as re
 except ImportError:
-    print("SKIP")
-    raise SystemExit
+    try:
+        import re
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 r = re.compile(".+")
 m = r.match("abc")

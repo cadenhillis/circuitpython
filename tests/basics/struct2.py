@@ -1,10 +1,13 @@
 # test ustruct with a count specified before the type
 
 try:
-    import struct
-except ImportError:
-    print("SKIP")
-    raise SystemExit
+    import ustruct as struct
+except:
+    try:
+        import struct
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 print(struct.calcsize('0s'))
 print(struct.unpack('0s', b''))

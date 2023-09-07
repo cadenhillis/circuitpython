@@ -9,8 +9,7 @@ MICROPY_FORCE_32BIT = 0
 MICROPY_USE_READLINE = 1
 
 # btree module using Berkeley DB 1.xx
-# CIRCUITPY: not present
-MICROPY_PY_BTREE = 0
+MICROPY_PY_BTREE = 1
 
 # _thread module using pthreads
 MICROPY_PY_THREAD = 1
@@ -40,7 +39,4 @@ MICROPY_PY_JNI = 0
 # as submodules (currently affects only libffi).
 MICROPY_STANDALONE = 0
 
-# CIRCUITPY
 CIRCUITPY_ULAB = 1
-MICROPY_EMIT_NATIVE = 0
-CFLAGS += -DCIRCUITPY=1

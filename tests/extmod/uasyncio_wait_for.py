@@ -1,10 +1,13 @@
 # Test asyncio.wait_for
 
 try:
-    import asyncio
+    import uasyncio as asyncio
 except ImportError:
-    print("SKIP")
-    raise SystemExit
+    try:
+        import asyncio
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 
 async def task(id, t):
@@ -107,21 +110,6 @@ async def main():
     t.cancel()
     await asyncio.sleep(0.01)
     print(sep)
-
-    # When wait_for gets cancelled and the task it's waiting on finishes around the
-    # same time as the cancellation of the wait_for
-    for num_sleep in range(1, 5):
-        t = asyncio.create_task(task_wait_for_cancel(4 + num_sleep, 0, 2))
-        for _ in range(num_sleep):
-            await asyncio.sleep(0)
-        assert not t.done()
-        print("cancel wait_for")
-        t.cancel()
-        try:
-            await t
-        except asyncio.CancelledError as er:
-            print(repr(er))
-        print(sep)
 
     print("finish")
 

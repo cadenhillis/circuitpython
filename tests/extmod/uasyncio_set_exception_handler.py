@@ -1,10 +1,13 @@
 # Test that tasks return their value correctly to the caller
 
 try:
-    import asyncio
+    import uasyncio as asyncio
 except ImportError:
-    print("SKIP")
-    raise SystemExit
+    try:
+        import asyncio
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 
 def custom_handler(loop, context):

@@ -1,19 +1,21 @@
 .. _micropython_lib:
 
-Standard Libraries
-==================
+MicroPython libraries
+=====================
 
-Python standard libraries
--------------------------
+Python standard libraries and micro-libraries
+---------------------------------------------
 
-The libraries below implement a subset of the corresponding
-standard Python (CPython) library. They are implemented in C, not Python.
+The libraries below are inherited from MicroPython.
+They are similar to the standard Python libraries with the same name.
+They implement a subset of or a variant of the corresponding
+standard Python library.
 
 CircuitPython's long-term goal is that code written in CircuitPython
 using Python standard libraries will be runnable on CPython without changes.
 
 These libraries are not enabled on CircuitPython builds with
-limited flash memory:
+limited flash memory, usually on non-Express builds:
 ``binascii``, ``errno``, ``json``, ``re``.
 
 These libraries are not currently enabled in any CircuitPython build, but may be in the future:
@@ -36,11 +38,11 @@ These libraries are not currently enabled in any CircuitPython build, but may be
    ctypes.rst
    select.rst
 
-Omitted ``string`` functions
-----------------------------
+Omitted functions in the ``string`` library
+-------------------------------------------
 
 A few string operations are not enabled on small builds
-due to limited flash memory:
+(usually non-Express), due to limited flash memory:
 ``string.center()``, ``string.partition()``, ``string.splitlines()``,
 ``string.reversed()``.
 
@@ -48,10 +50,13 @@ due to limited flash memory:
 CircuitPython/MicroPython-specific libraries
 --------------------------------------------
 
-Functionality specific to the CircuitPython/MicroPython implementations is available in
-the following libraries.
+Functionality specific to the CircuitPython/MicroPython implementation is available in
+the following libraries. These libraries may change significantly or be removed in future
+versions of CircuitPython.
 
 .. toctree::
    :maxdepth: 1
 
+   btree.rst
+   framebuf.rst
    micropython.rst

@@ -1,7 +1,7 @@
-# Test overflow in re.compile output code.
+# Test overflow in ure.compile output code.
 
 try:
-    import re
+    import ure as re
 except ImportError:
     print("SKIP")
     raise SystemExit

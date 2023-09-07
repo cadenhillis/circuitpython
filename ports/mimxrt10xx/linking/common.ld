@@ -71,8 +71,7 @@ SECTIONS
         . = ALIGN(4);
     *(EXCLUDE_FILE(
         *fsl_flexspi.o
-        *cd_ci_hs.o
-        *ehci.o
+        *dcd_ci_hs.o
         *tusb_fifo.o
         *usbd.o
         *string0.o
@@ -88,15 +87,7 @@ SECTIONS
         /* Keep USB processing functions out of RAM because we don't know which will be used.
            We try to only keep USB interrupt related functions. */
         *dcd_ci_hs.o(.text.process_*_request .text.dcd_edpt* .text.dcd_init .text.dcd_set_address)
-        /* Move hcd_dcache* routines to RAM so that we don't cross execution from
-           the cache during cache maintenance. Weird things happen when we do. */
-        *hcd_ci_hs.o(.text.hcd_i*)
         *usbd.o(.text.process_*_request .text.process_[gs]et* .text.tud_* .text.usbd_* .text.configuration_reset .text.invoke_*)
-        *ehci.o(.text.hcd_edpt* .text.hcd_setup* .text.ehci_init* .text.hcd_port* .text.hcd_device* .text.qtd_init* .text.list_remove*)
-
-        /* Less critical portions of the runtime. */
-        *runtime.o(.text.mp_import* .text.mp_resume* .text.mp_make_raise*  .text.mp_init)
-        *gc.o(.text.gc_never_free .text.gc_make_long_lived)
 
         /* Anything marked cold/unlikely should be in flash. */
         *(.text.unlikely.*)
@@ -155,7 +146,6 @@ SECTIONS
         *(.itcm.*)
         *fsl_flexspi.o(.text*)
         *dcd_ci_hs.o(.text*)
-        *ehci.o(.text*)
         *tusb_fifo.o(.text*)
         *py/objboundmeth.o(.text*)
         *py/objtype.o(.text*)

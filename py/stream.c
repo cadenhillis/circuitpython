@@ -3,8 +3,8 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2014 Damien P. George
- * Copyright (c) 2014-2016 Paul Sokolovsky
+ * SPDX-FileCopyrightText: Copyright (c) 2014 Damien P. George
+ * SPDX-FileCopyrightText: Copyright (c) 2014-2016 Paul Sokolovsky
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -51,12 +51,13 @@ static mp_obj_t mp_obj_new_str_from_vstr_check(const mp_obj_type_t *type, vstr_t
     return mp_obj_new_str_from_vstr(type, vstr);
 }
 
+
 // Returns error condition in *errcode, if non-zero, return value is number of bytes written
 // before error condition occurred. If *errcode == 0, returns total bytes written (which will
 // be equal to input size).
-mp_uint_t mp_stream_rw(mp_obj_t stream, void *buf_, mp_uint_t size, int *errcode, byte flags) {
+mp_uint_t mp_stream_rw(mp_obj_t stream, void *buf_, mp_uint_t size, int *errcode, byte flags, int offset) {
     byte *buf = buf_;
-    typedef mp_uint_t (*io_func_t)(mp_obj_t obj, void *buf, mp_uint_t size, int *errcode);
+    typedef mp_uint_t (*io_func_t)(mp_obj_t obj, void *buf, mp_uint_t size, int *errcode, int offset);
     io_func_t io_func;
     const mp_stream_p_t *stream_p = mp_get_stream(stream);
     if (flags & MP_STREAM_RW_WRITE) {
@@ -68,7 +69,7 @@ mp_uint_t mp_stream_rw(mp_obj_t stream, void *buf_, mp_uint_t size, int *errcode
     *errcode = 0;
     mp_uint_t done = 0;
     while (size > 0) {
-        mp_uint_t out_sz = io_func(stream, buf, size, errcode);
+        mp_uint_t out_sz = io_func(stream, buf, size, errcode, offset);
         // For read, out_sz == 0 means EOF. For write, it's unspecified
         // what it means, but we don't make any progress, so returning
         // is still the best option.
@@ -146,7 +147,7 @@ STATIC mp_obj_t stream_read_generic(size_t n_args, const mp_obj_t *args, byte fl
         while (more_bytes > 0) {
             char *p = vstr_add_len(&vstr, more_bytes);
             int error;
-            mp_uint_t out_sz = mp_stream_read_exactly(args[0], p, more_bytes, &error);
+            mp_uint_t out_sz = mp_stream_read_exactly(args[0], p, more_bytes, &error,0);
             if (error != 0) {
                 vstr_cut_tail_bytes(&vstr, more_bytes);
                 if (mp_is_nonblocking_error(error)) {
@@ -216,7 +217,7 @@ STATIC mp_obj_t stream_read_generic(size_t n_args, const mp_obj_t *args, byte fl
     vstr_t vstr;
     vstr_init_len(&vstr, sz);
     int error;
-    mp_uint_t out_sz = mp_stream_rw(args[0], vstr.buf, sz, &error, flags);
+    mp_uint_t out_sz = mp_stream_rw(args[0], vstr.buf, sz, &error, flags,0);
     if (error != 0) {
         vstr_clear(&vstr);
         if (mp_is_nonblocking_error(error)) {
@@ -246,7 +247,7 @@ MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mp_stream_read1_obj, 1, 2, stream_read1);
 
 mp_obj_t mp_stream_write(mp_obj_t self_in, const void *buf, size_t len, byte flags) {
     int error;
-    mp_uint_t out_sz = mp_stream_rw(self_in, (void *)buf, len, &error, flags);
+    mp_uint_t out_sz = mp_stream_rw(self_in, (void *)buf, len, &error, flags,0);
     if (error != 0) {
         if (mp_is_nonblocking_error(error)) {
             // http://docs.python.org/3/library/io.html#io.RawIOBase.write
@@ -302,18 +303,20 @@ STATIC mp_obj_t stream_readinto(size_t n_args, const mp_obj_t *args) {
     // instead of full buffer. Similar to
     // https://docs.python.org/3/library/socket.html#socket.socket.recv_into
     mp_uint_t len = bufinfo.len;
+	int offset=0;
     if (n_args > 2) {
-        if (mp_get_stream(args[0])->pyserial_readinto_compatibility) {
+        if (false && mp_get_stream(args[0])->pyserial_readinto_compatibility) {
             mp_raise_ValueError(MP_ERROR_TEXT("length argument not allowed for this type"));
         }
-        len = mp_obj_get_int(args[2]);
-        if (len > bufinfo.len) {
-            len = bufinfo.len;
+        offset = mp_obj_get_int(args[2]);
+		len = mp_obj_get_int(args[3]);
+        if (len + offset > bufinfo.len) {
+            len = bufinfo.len-offset;
         }
     }
 
     int error;
-    mp_uint_t out_sz = mp_stream_read_exactly(args[0], bufinfo.buf, len, &error);
+    mp_uint_t out_sz = mp_stream_read_exactly(args[0], bufinfo.buf, len, &error,offset);
     if (error != 0) {
         if (mp_is_nonblocking_error(error)) {
             // pyserial readinto never returns None, just 0.
@@ -326,7 +329,7 @@ STATIC mp_obj_t stream_readinto(size_t n_args, const mp_obj_t *args) {
         return MP_OBJ_NEW_SMALL_INT(out_sz);
     }
 }
-MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mp_stream_readinto_obj, 2, 3, stream_readinto);
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mp_stream_readinto_obj, 2, 4, stream_readinto);
 
 STATIC mp_obj_t stream_readall(mp_obj_t self_in) {
     const mp_stream_p_t *stream_p = mp_get_stream(self_in);
@@ -338,7 +341,7 @@ STATIC mp_obj_t stream_readall(mp_obj_t self_in) {
     mp_uint_t current_read = DEFAULT_BUFFER_SIZE;
     while (true) {
         int error;
-        mp_uint_t out_sz = stream_p->read(self_in, p, current_read, &error);
+        mp_uint_t out_sz = stream_p->read(self_in, p, current_read, &error,0);
         if (out_sz == MP_STREAM_ERROR) {
             if (mp_is_nonblocking_error(error)) {
                 // With non-blocking streams, we read as much as we can.
@@ -393,7 +396,7 @@ STATIC mp_obj_t stream_unbuffered_readline(size_t n_args, const mp_obj_t *args) 
     while (max_size == -1 || max_size-- != 0) {
         char *p = vstr_add_len(&vstr, 1);
         int error;
-        mp_uint_t out_sz = stream_p->read(args[0], p, 1, &error);
+        mp_uint_t out_sz = stream_p->read(args[0], p, 1, &error,0);
         if (out_sz == MP_STREAM_ERROR) {
             if (mp_is_nonblocking_error(error)) {
                 if (vstr.len == 1) {
@@ -556,7 +559,7 @@ ssize_t mp_stream_posix_write(mp_obj_t stream, const void *buf, size_t len) {
 ssize_t mp_stream_posix_read(mp_obj_t stream, void *buf, size_t len) {
     mp_obj_base_t *o = (mp_obj_base_t *)MP_OBJ_TO_PTR(stream);
     const mp_stream_p_t *stream_p = mp_get_stream(o);
-    mp_uint_t out_sz = stream_p->read(stream, buf, len, &errno);
+    mp_uint_t out_sz = stream_p->read(stream, buf, len, &errno, offset);
     if (out_sz == MP_STREAM_ERROR) {
         return -1;
     } else {

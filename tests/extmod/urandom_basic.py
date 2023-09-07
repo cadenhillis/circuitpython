@@ -1,5 +1,5 @@
 try:
-    import random
+    import urandom as random
 except ImportError:
     try:
         import random

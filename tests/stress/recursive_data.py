@@ -1,6 +1,6 @@
 # This tests that printing recursive data structure doesn't lead to segfault.
 try:
-    import io
+    import uio as io
 except ImportError:
     print("SKIP")
     raise SystemExit

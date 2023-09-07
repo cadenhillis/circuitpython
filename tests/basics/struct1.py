@@ -1,8 +1,11 @@
 try:
-    import struct
-except ImportError:
-    print("SKIP")
-    raise SystemExit
+    import ustruct as struct
+except:
+    try:
+        import struct
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 print(struct.calcsize("<bI"))
 print(struct.unpack("<bI", b"\x80\0\0\x01\0"))

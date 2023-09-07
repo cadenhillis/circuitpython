@@ -44,7 +44,8 @@
 //|
 
 STATIC mp_obj_t ssl_create_default_context(void) {
-    ssl_sslcontext_obj_t *s = mp_obj_malloc(ssl_sslcontext_obj_t, &ssl_sslcontext_type);
+    ssl_sslcontext_obj_t *s = m_new_obj(ssl_sslcontext_obj_t);
+    s->base.type = &ssl_sslcontext_type;
 
     common_hal_ssl_create_default_context(s);
     return s;
@@ -66,4 +67,4 @@ const mp_obj_module_t ssl_module = {
     .globals = (mp_obj_dict_t *)&ssl_globals,
 };
 
-MP_REGISTER_MODULE(MP_QSTR_ssl, ssl_module);
+MP_REGISTER_MODULE(MP_QSTR_ssl, ssl_module, CIRCUITPY_SSL);

@@ -1,8 +1,11 @@
 try:
-    import re
+    import ure as re
 except ImportError:
-    print("SKIP")
-    raise SystemExit
+    try:
+        import re
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 try:
     re.sub
@@ -72,7 +75,3 @@ except TypeError:
 
 # Include \ in the sub replacement
 print(re.sub("b", "\\\\b", "abc"))
-
-# Using ^, make sre it doesn't repeatedly match
-print(re.sub("^ab", "*", "abababcabab"))
-print(re.sub("^ab|cab", "*", "abababcabab"))

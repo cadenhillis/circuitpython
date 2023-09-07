@@ -9,6 +9,8 @@ try:
 except AttributeError:
     pass
 
+a = set()
+
 
 def test():
     micropython.heap_lock()
@@ -19,8 +21,8 @@ def test():
         print(type(e).__name__, e)
 
     try:
-        raise 0
-    except TypeError as e:
+        a.pop()
+    except KeyError as e:
         print(type(e).__name__, e)
 
     try:
@@ -29,8 +31,8 @@ def test():
         print(e.args[0])
 
     try:
-        raise 0
-    except TypeError as e:
+        a.pop()
+    except KeyError as e:
         print(e.args[0])
 
     micropython.heap_unlock()

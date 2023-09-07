@@ -32,8 +32,13 @@
 #define __INCLUDED_MPCONFIG_CIRCUITPY_H
 
 #include <stdint.h>
+#ifndef __cplusplus
 #include <stdatomic.h>
+#endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 // This is CircuitPython.
 // Always 1: defined in circuitpy_mpconfig.mk
 // #define CIRCUITPY (1)
@@ -55,16 +60,6 @@ extern void common_hal_mcu_enable_interrupts(void);
 #define MICROPY_BEGIN_ATOMIC_SECTION() (common_hal_mcu_disable_interrupts(), 0)
 #define MICROPY_END_ATOMIC_SECTION(state) ((void)state, common_hal_mcu_enable_interrupts())
 
-// MicroPython-only options not used by CircuitPython, but present in various files
-// inherited from MicroPython, especially in extmod/
-#define MICROPY_ENABLE_DYNRUNTIME        (0)
-#define MICROPY_PY_BLUETOOTH             (0)
-#define MICROPY_PY_LWIP_SLIP             (0)
-#define MICROPY_PY_OS_DUPTERM            (0)
-#define MICROPY_ROM_TEXT_COMPRESSION     (0)
-#define MICROPY_VFS_LFS1                 (0)
-#define MICROPY_VFS_LFS2                 (0)
-
 // Sorted alphabetically for easy finding.
 //
 // default is 128; consider raising to reduce fragmentation.
@@ -83,7 +78,6 @@ extern void common_hal_mcu_enable_interrupts(void);
 #define MICROPY_ENABLE_DOC_STRING        (0)
 #define MICROPY_ENABLE_FINALISER         (1)
 #define MICROPY_ENABLE_GC                (1)
-#define MICROPY_ENABLE_PYSTACK           (1)
 #define MICROPY_TRACKED_ALLOC            (CIRCUITPY_SSL_MBEDTLS)
 #define MICROPY_ENABLE_SOURCE_LINE       (1)
 #define MICROPY_EPOCH_IS_1970            (1)
@@ -107,6 +101,7 @@ extern void common_hal_mcu_enable_interrupts(void);
 #define MICROPY_PY_ARRAY                 (CIRCUITPY_ARRAY)
 #define MICROPY_PY_ARRAY_SLICE_ASSIGN    (1)
 #define MICROPY_PY_ATTRTUPLE             (1)
+
 #define MICROPY_PY_BUILTINS_BYTEARRAY    (1)
 #define MICROPY_PY_BUILTINS_ENUMERATE    (1)
 #define MICROPY_PY_BUILTINS_FILTER       (1)
@@ -154,6 +149,7 @@ extern void common_hal_mcu_enable_interrupts(void);
 #define MICROPY_QSTR_BYTES_IN_HASH       (1)
 #define MICROPY_REPL_AUTO_INDENT         (1)
 #define MICROPY_REPL_EVENT_DRIVEN        (0)
+#define MICROPY_ENABLE_PYSTACK           (1)
 #define CIRCUITPY_SETTABLE_PYSTACK       (1)
 #define MICROPY_STACK_CHECK              (1)
 #define MICROPY_STREAMS_NON_BLOCK        (1)
@@ -204,8 +200,13 @@ typedef int mp_int_t; // must be pointer size
 typedef unsigned int mp_uint_t; // must be pointer size
 #endif
 #if __GNUC__ >= 10 // on recent gcc versions we can check that this is so
+#ifdef __cplusplus
+static_assert(sizeof(mp_int_t) == sizeof(void *), "pointer sizes match");
+static_assert(sizeof(mp_uint_t) == sizeof(void *), "pointer sizes match");
+#else
 _Static_assert(sizeof(mp_int_t) == sizeof(void *));
 _Static_assert(sizeof(mp_uint_t) == sizeof(void *));
+#endif
 #endif
 typedef long mp_off_t;
 
@@ -214,6 +215,7 @@ typedef long mp_off_t;
 #define mp_type_fileio mp_type_vfs_fat_fileio
 #define mp_type_textio mp_type_vfs_fat_textio
 
+#define mp_import_stat mp_vfs_import_stat
 #define mp_builtin_open_obj mp_vfs_open_obj
 
 
@@ -491,6 +493,13 @@ void background_callback_run_all(void);
 
 #define CIRCUITPY_VERBOSE_BLE 0
 
+// This trades ~1k flash space (1) for that much in RAM plus the cost to compute
+// the values once on init (0). Only turn it off, when you really need the flash
+// space and are willing to trade the RAM.
+#ifndef CIRCUITPY_PRECOMPUTE_QSTR_ATTR
+#define CIRCUITPY_PRECOMPUTE_QSTR_ATTR (1)
+#endif
+
 // Display the Blinka logo in the REPL on displayio displays.
 #ifndef CIRCUITPY_REPL_LOGO
 #define CIRCUITPY_REPL_LOGO (1)
@@ -612,16 +621,12 @@ void background_callback_run_all(void);
 #define CIRCUITPY_DIGITALIO_HAVE_INVALID_DRIVE_MODE (0)
 #endif
 
-// Align the internal sector buffer. Useful when it is passed into TinyUSB for
-// loads.
-#ifndef MICROPY_FATFS_WINDOW_ALIGNMENT
-#define MICROPY_FATFS_WINDOW_ALIGNMENT CIRCUITPY_TUSB_MEM_ALIGN
-#endif
-
 #define FF_FS_CASE_INSENSITIVE_COMPARISON_ASCII_ONLY (1)
 
 #define FF_FS_MAKE_VOLID (1)
 
 #define MICROPY_PY_OPTIMIZE_PROPERTY_FLASH_SIZE (CIRCUITPY_OPTIMIZE_PROPERTY_FLASH_SIZE)
-
+#ifdef __cplusplus
+}
+#endif
 #endif  // __INCLUDED_MPCONFIG_CIRCUITPY_H

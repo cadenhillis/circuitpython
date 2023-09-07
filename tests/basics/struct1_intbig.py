@@ -1,8 +1,11 @@
 try:
-    import struct
-except ImportError:
-    print("SKIP")
-    raise SystemExit
+    import ustruct as struct
+except:
+    try:
+        import struct
+    except ImportError:
+        print("SKIP")
+        raise SystemExit
 
 # check maximum pack on 32-bit machine
 print(struct.pack("<I", 2**32 - 1))

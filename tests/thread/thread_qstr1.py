@@ -4,7 +4,10 @@
 #
 # SPDX-License-Identifier: MIT
 
-import time
+try:
+    import utime as time
+except ImportError:
+    import time
 import _thread
 
 

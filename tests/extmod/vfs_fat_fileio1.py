@@ -1,12 +1,12 @@
 try:
-    import errno
-    import os
+    import uerrno
+    import uos
 except ImportError:
     print("SKIP")
     raise SystemExit
 
 try:
-    os.VfsFat
+    uos.VfsFat
 except AttributeError:
     print("SKIP")
     raise SystemExit
@@ -43,10 +43,10 @@ except MemoryError:
     print("SKIP")
     raise SystemExit
 
-os.VfsFat.mkfs(bdev)
-vfs = os.VfsFat(bdev)
-os.mount(vfs, "/ramdisk")
-os.chdir("/ramdisk")
+uos.VfsFat.mkfs(bdev)
+vfs = uos.VfsFat(bdev)
+uos.mount(vfs, "/ramdisk")
+uos.chdir("/ramdisk")
 
 # file IO
 f = open("foo_file.txt", "w")
@@ -58,22 +58,22 @@ f.close()  # allowed
 try:
     f.write("world!")
 except OSError as e:
-    print(e.errno == errno.EINVAL)
+    print(e.errno == uerrno.EINVAL)
 
 try:
     f.read()
 except OSError as e:
-    print(e.errno == errno.EINVAL)
+    print(e.errno == uerrno.EINVAL)
 
 try:
     f.flush()
 except OSError as e:
-    print(e.errno == errno.EINVAL)
+    print(e.errno == uerrno.EINVAL)
 
 try:
     open("foo_file.txt", "x")
 except OSError as e:
-    print(e.errno == errno.EEXIST)
+    print(e.errno == uerrno.EEXIST)
 
 with open("foo_file.txt", "a") as f:
     f.write("world!")
@@ -105,7 +105,7 @@ vfs.mkdir("foo_dir")
 try:
     vfs.rmdir("foo_file.txt")
 except OSError as e:
-    print(e.errno == 20)  # errno.ENOTDIR
+    print(e.errno == 20)  # uerrno.ENOTDIR
 
 vfs.remove("foo_file.txt")
 print(list(vfs.ilistdir()))

@@ -171,10 +171,7 @@ endif
 # we know is ok. It's not clear how to give the compiler the info it needs so
 # disable the checks for now.
 # See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99578
-GCCVERSIONGTEQ11 := $(shell expr `$(CC) -dumpversion` \>= 11)
-ifeq ($(GCC_VERSION_GTEQ_11),1)
 CFLAGS += -Wno-stringop-overread -Wno-stringop-overflow
-endif
 
 LDFLAGS = $(CFLAGS) -nostartfiles -Wl,-nostdlib -Wl,-T,$(GENERATED_LD_FILE) -Wl,-Map=$@.map -Wl,-cref -Wl,-gc-sections -specs=nano.specs
 
@@ -352,13 +349,11 @@ OBJ += $(addprefix $(BUILD)/, $(SRC_CIRCUITPY_COMMON:.c=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_S:.s=.o))
 OBJ += $(addprefix $(BUILD)/, $(SRC_MOD:.c=.o))
 
-QSTR_GLOBAL_REQUIREMENTS += $(HEADER_BUILD)/sdiodata.h
-OBJ_EXTRA_ORDER_DEPS += $(HEADER_BUILD)/sioddata.h
+SRC_QSTR += $(HEADER_BUILD)/sdiodata.h
 $(HEADER_BUILD)/sdiodata.h: tools/mksdiodata.py | $(HEADER_BUILD)
 	$(Q)$(PYTHON) $< > $@
 
 SRC_QSTR += $(HEADER_BUILD)/candata.h
-OBJ_EXTRA_ORDER_DEPS += $(HEADER_BUILD)/candata.h
 $(HEADER_BUILD)/candata.h: tools/mkcandata.py | $(HEADER_BUILD)
 	$(Q)$(PYTHON) $< > $@
 
@@ -371,8 +366,9 @@ all: $(BUILD)/firmware.bin $(BUILD)/firmware.uf2
 ifeq ($(VALID_BOARD),)
 $(BUILD)/firmware.elf: invalid-board
 else
+#CC = arm-none-eabi-g++
 $(BUILD)/firmware.elf: $(OBJ) $(GENERATED_LD_FILE)
-	$(STEPECHO) "LINK $@"
+	$(STEPECHO) "LINK $@ $(CC)"
 	$(Q)echo $(OBJ) > $(BUILD)/firmware.objs
 	$(Q)$(CC) -o $@ $(LDFLAGS) @$(BUILD)/firmware.objs -Wl,--print-memory-usage -Wl,--start-group $(LIBS) -Wl,--end-group
 	$(Q)$(SIZE) $@ | $(PYTHON) $(TOP)/tools/build_memory_info.py $(GENERATED_LD_FILE) $(BUILD)
@@ -387,3 +383,8 @@ $(BUILD)/firmware.uf2: $(BUILD)/firmware.bin
 	$(Q)$(PYTHON) $(TOP)/tools/uf2/utils/uf2conv.py -b $(BOOTLOADER_SIZE) -c -o $@ $^
 
 include $(TOP)/py/mkrules.mk
+
+# Print out the value of a make variable.
+# https://stackoverflow.com/questions/16467718/how-to-print-out-a-variable-in-makefile
+print-%:
+	@echo $* = $($*)

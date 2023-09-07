@@ -1,4 +1,7 @@
-import io
+try:
+    import uio as io
+except:
+    import io
 
 try:
     io.IOBase

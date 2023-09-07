@@ -1,6 +1,6 @@
 """
 This is a helper script for merging in new versions of MicroPython. You *must*
-evaluate its correctness and adapt it for each MP version. This is committed
+evaluate it's correctness and adapt it for each MP version. This is committed
 in the repo more for reference than "fire and forget" use.
 """
 
@@ -11,24 +11,22 @@ from io import StringIO
 out_buf = StringIO()
 
 ports_to_delete = [
-    "bare-arm",
-    "cc3200",
-    "embed",
-    "esp32",
-    "esp8266",
-    "javascript",
     "mimxrt",
-    "minimal",
-    "pic16bit",
     "powerpc",
-    "qemu-arm",
-    "renesas-ra",
-    "rp2",
     "samd",
+    "javascript",
     "stm32",
+    "esp32",
+    "cc3200",
     "teensy",
     "windows",
     "zephyr",
+    "minimal",
+    "esp8266",
+    "pic16bit",
+    "qemu-arm",
+    "bare-arm",
+    "rp2",
 ]
 for p in ports_to_delete:
     try:

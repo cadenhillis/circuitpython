@@ -46,7 +46,7 @@
 
 typedef struct _msgpack_stream_t {
     mp_obj_t stream_obj;
-    mp_uint_t (*read)(mp_obj_t obj, void *buf, mp_uint_t size, int *errcode);
+    mp_uint_t (*read)(mp_obj_t obj, void *buf, mp_uint_t size, int *errcode, int offset);
     mp_uint_t (*write)(mp_obj_t obj, const void *buf, mp_uint_t size, int *errcode);
     int errcode;
 } msgpack_stream_t;
@@ -64,7 +64,7 @@ STATIC void read(msgpack_stream_t *s, void *buf, mp_uint_t size) {
     if (size == 0) {
         return;
     }
-    mp_uint_t ret = s->read(s->stream_obj, buf, size, &s->errcode);
+    mp_uint_t ret = s->read(s->stream_obj, buf, size, &s->errcode,0);
     if (s->errcode != 0) {
         mp_raise_OSError(s->errcode);
     }
@@ -385,7 +385,8 @@ STATIC mp_obj_t unpack_ext(msgpack_stream_t *s, size_t size, mp_obj_t ext_hook) 
     if (ext_hook != mp_const_none) {
         return mp_call_function_2(ext_hook, MP_OBJ_NEW_SMALL_INT(code), data);
     } else {
-        mod_msgpack_extype_obj_t *o = mp_obj_malloc(mod_msgpack_extype_obj_t, &mod_msgpack_exttype_type);
+        mod_msgpack_extype_obj_t *o = m_new_obj(mod_msgpack_extype_obj_t);
+        o->base.type = &mod_msgpack_exttype_type;
         o->code = code;
         o->data = data;
         return MP_OBJ_FROM_PTR(o);

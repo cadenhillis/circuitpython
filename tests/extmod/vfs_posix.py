@@ -1,9 +1,9 @@
 # Test for VfsPosix
 
 try:
-    import os
+    import uos
 
-    os.VfsPosix
+    uos.VfsPosix
 except (ImportError, AttributeError):
     print("SKIP")
     raise SystemExit
@@ -12,27 +12,27 @@ except (ImportError, AttributeError):
 # Skip the test if it does exist.
 temp_dir = "micropy_test_dir"
 try:
-    os.stat(temp_dir)
+    uos.stat(temp_dir)
     print("SKIP")
     raise SystemExit
 except OSError:
     pass
 
 # getcwd and chdir
-curdir = os.getcwd()
-os.chdir("/")
-print(os.getcwd())
-os.chdir(curdir)
-print(os.getcwd() == curdir)
+curdir = uos.getcwd()
+uos.chdir("/")
+print(uos.getcwd())
+uos.chdir(curdir)
+print(uos.getcwd() == curdir)
 
 # stat
-print(type(os.stat("/")))
+print(type(uos.stat("/")))
 
 # listdir and ilistdir
-print(type(os.listdir("/")))
+print(type(uos.listdir("/")))
 
 # mkdir
-os.mkdir(temp_dir)
+uos.mkdir(temp_dir)
 
 # file create
 f = open(temp_dir + "/test", "w")
@@ -52,38 +52,37 @@ print(f.read())
 f.close()
 
 # rename
-os.rename(temp_dir + "/test", temp_dir + "/test2")
-print(os.listdir(temp_dir))
+uos.rename(temp_dir + "/test", temp_dir + "/test2")
+print(uos.listdir(temp_dir))
 
 # construct new VfsPosix with path argument
-vfs = os.VfsPosix(temp_dir)
+vfs = uos.VfsPosix(temp_dir)
 print(list(i[0] for i in vfs.ilistdir(".")))
 
-# stat, statvfs (statvfs may not exist)
+# stat, statvfs
 print(type(vfs.stat(".")))
-if hasattr(vfs, "statvfs"):
-    assert type(vfs.statvfs(".")) is tuple
+print(type(vfs.statvfs(".")))
 
 # check types of ilistdir with str/bytes arguments
 print(type(list(vfs.ilistdir("."))[0][0]))
 print(type(list(vfs.ilistdir(b"."))[0][0]))
 
 # remove
-os.remove(temp_dir + "/test2")
-print(os.listdir(temp_dir))
+uos.remove(temp_dir + "/test2")
+print(uos.listdir(temp_dir))
 
 # remove with error
 try:
-    os.remove(temp_dir + "/test2")
+    uos.remove(temp_dir + "/test2")
 except OSError:
     print("remove OSError")
 
 # rmdir
-os.rmdir(temp_dir)
-print(temp_dir in os.listdir())
+uos.rmdir(temp_dir)
+print(temp_dir in uos.listdir())
 
 # rmdir with error
 try:
-    os.rmdir(temp_dir)
+    uos.rmdir(temp_dir)
 except OSError:
     print("rmdir OSError")

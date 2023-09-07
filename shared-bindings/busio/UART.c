@@ -44,22 +44,7 @@
 // #define STREAM_DEBUG(...) mp_printf(&mp_plat_print __VA_OPT__(,) __VA_ARGS__)
 
 //| class UART:
-//|     """A bidirectional serial protocol
-//|
-//|     .. raw:: html
-//|
-//|         <p>
-//|         <details>
-//|         <summary>Available on these boards</summary>
-//|         <ul>
-//|         {% for board in support_matrix_reverse["busio.UART"] %}
-//|         <li> {{ board }}
-//|         {% endfor %}
-//|         </ul>
-//|         </details>
-//|         </p>
-//|
-//|     """
+//|     """A bidirectional serial protocol"""
 //|
 //|     def __init__(
 //|         self,
@@ -119,7 +104,7 @@ STATIC void validate_timeout(mp_float_t timeout) {
 STATIC mp_obj_t busio_uart_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *all_args) {
     #if CIRCUITPY_BUSIO_UART
     enum { ARG_tx, ARG_rx, ARG_baudrate, ARG_bits, ARG_parity, ARG_stop, ARG_timeout, ARG_receiver_buffer_size,
-           ARG_rts, ARG_cts, ARG_rs485_dir, ARG_rs485_invert};
+           ARG_rts, ARG_cts, ARG_rs485_dir,ARG_rs485_invert};
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_tx, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_rx, MP_ARG_OBJ, {.u_obj = mp_const_none} },
@@ -170,7 +155,11 @@ STATIC mp_obj_t busio_uart_make_new(const mp_obj_type_t *type, size_t n_args, si
 
     const bool rs485_invert = args[ARG_rs485_invert].u_bool;
 
-    busio_uart_obj_t *self = m_new_obj_with_finaliser(busio_uart_obj_t);
+    // Always initially allocate the UART object within the long-lived heap.
+    // This is needed to avoid crashes with certain UART implementations which
+    // cannot accommodate being moved after creation. (See
+    // https://github.com/adafruit/circuitpython/issues/1056)
+    busio_uart_obj_t *self = m_new_ll_obj_with_finaliser(busio_uart_obj_t);
     self->base.type = &busio_uart_type;
 
     common_hal_busio_uart_construct(self, tx, rx, rts, cts, rs485_dir, rs485_invert,
@@ -272,7 +261,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(busio_uart___exit___obj, 4, 4, busio_
 //|         ...
 
 // These three methods are used by the shared stream methods.
-STATIC mp_uint_t busio_uart_read(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *errcode) {
+STATIC mp_uint_t busio_uart_read(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *errcode, int offset) {
     STREAM_DEBUG("busio_uart_read stream %d\n", size);
     busio_uart_obj_t *self = native_uart(self_in);
     check_for_deinit(self);
@@ -283,7 +272,7 @@ STATIC mp_uint_t busio_uart_read(mp_obj_t self_in, void *buf_in, mp_uint_t size,
         return 0;
     }
 
-    return common_hal_busio_uart_read(self, buf, size, errcode);
+    return common_hal_busio_uart_read(self, buf, size, errcode,offset);
 }
 
 STATIC mp_uint_t busio_uart_write(mp_obj_t self_in, const void *buf_in, mp_uint_t size, int *errcode) {

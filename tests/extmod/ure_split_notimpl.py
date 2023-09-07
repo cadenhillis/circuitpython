@@ -1,5 +1,5 @@
 try:
-    import re
+    import ure as re
 except ImportError:
     print("SKIP")
     raise SystemExit

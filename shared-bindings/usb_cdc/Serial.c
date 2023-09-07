@@ -91,7 +91,7 @@
 //|         ...
 
 // These three methods are used by the shared stream methods.
-STATIC mp_uint_t usb_cdc_serial_read_stream(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *errcode) {
+STATIC mp_uint_t usb_cdc_serial_read_stream(mp_obj_t self_in, void *buf_in, mp_uint_t size, int *errcode,int offset) {
     usb_cdc_serial_obj_t *self = MP_OBJ_TO_PTR(self_in);
     byte *buf = buf_in;
 

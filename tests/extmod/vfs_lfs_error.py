@@ -1,10 +1,10 @@
 # Test for VfsLittle using a RAM device, testing error handling
 
 try:
-    import os
+    import uos
 
-    os.VfsLfs1
-    os.VfsLfs2
+    uos.VfsLfs1
+    uos.VfsLfs2
 except (ImportError, AttributeError):
     print("SKIP")
     raise SystemExit
@@ -117,5 +117,5 @@ def test(bdev, vfs_class):
 
 
 bdev = RAMBlockDevice(30)
-test(bdev, os.VfsLfs1)
-test(bdev, os.VfsLfs2)
+test(bdev, uos.VfsLfs1)
+test(bdev, uos.VfsLfs2)

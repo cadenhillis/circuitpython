@@ -1,6 +1,9 @@
 # Make sure that write operations on io.BytesIO don't
 # change original object it was constructed from.
-import io
+try:
+    import uio as io
+except ImportError:
+    import io
 
 b = b"foobar"
 

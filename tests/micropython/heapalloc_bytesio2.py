@@ -1,7 +1,7 @@
 # Creating BytesIO from immutable object should not immediately
 # copy its content.
 try:
-    import io
+    import uio
     import micropython
 
     micropython.mem_total
@@ -14,7 +14,7 @@ data = b"1234" * 256
 
 before = micropython.mem_total()
 
-buf = io.BytesIO(data)
+buf = uio.BytesIO(data)
 
 after = micropython.mem_total()
 

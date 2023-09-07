@@ -1,10 +1,13 @@
 try:
-    import hashlib
+    import uhashlib as hashlib
 except ImportError:
-    # This is neither uPy, nor cPy, so must be uPy with
-    # hashlib module disabled.
-    print("SKIP")
-    raise SystemExit
+    try:
+        import hashlib
+    except ImportError:
+        # This is neither uPy, nor cPy, so must be uPy with
+        # uhashlib module disabled.
+        print("SKIP")
+        raise SystemExit
 
 try:
     hashlib.md5

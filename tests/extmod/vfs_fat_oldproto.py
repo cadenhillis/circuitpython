@@ -1,12 +1,12 @@
 try:
-    import errno
-    import os
+    import uerrno
+    import uos
 except ImportError:
     print("SKIP")
     raise SystemExit
 
 try:
-    os.VfsFat
+    uos.VfsFat
 except AttributeError:
     print("SKIP")
     raise SystemExit
@@ -43,9 +43,9 @@ except MemoryError:
     print("SKIP")
     raise SystemExit
 
-os.VfsFat.mkfs(bdev)
-vfs = os.VfsFat(bdev)
-os.mount(vfs, "/ramdisk")
+uos.VfsFat.mkfs(bdev)
+vfs = uos.VfsFat(bdev)
+uos.mount(vfs, "/ramdisk")
 
 # file io
 with vfs.open("file.txt", "w") as f:

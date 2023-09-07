@@ -1,9 +1,9 @@
 # test VFS functionality without any particular filesystem type
 
 try:
-    import os
+    import uos
 
-    os.mount
+    uos.mount
 except (ImportError, AttributeError):
     print("SKIP")
     raise SystemExit
@@ -59,35 +59,35 @@ class Filesystem:
 
 # first we umount any existing mount points the target may have
 try:
-    os.umount("/")
+    uos.umount("/")
 except OSError:
     pass
-for path in os.listdir("/"):
-    os.umount("/" + path)
+for path in uos.listdir("/"):
+    uos.umount("/" + path)
 
 # stat root dir
-print(os.stat("/"))
+print(uos.stat("/"))
 
 # statvfs root dir; verify that f_namemax has a sensible size
-print(os.statvfs("/")[9] >= 32)
+print(uos.statvfs("/")[9] >= 32)
 
 # getcwd when in root dir
-print(os.getcwd())
+print(uos.getcwd())
 
 # test operations on the root directory with nothing mounted, they should all fail
 for func in ("chdir", "listdir", "mkdir", "remove", "rmdir", "stat"):
     for arg in ("x", "/x"):
         try:
-            getattr(os, func)(arg)
+            getattr(uos, func)(arg)
         except OSError:
             print(func, arg, "OSError")
 
 # basic mounting and listdir
-os.mount(Filesystem(1), "/test_mnt")
-print(os.listdir())
+uos.mount(Filesystem(1), "/test_mnt")
+print(uos.listdir())
 
 # ilistdir
-i = os.ilistdir()
+i = uos.ilistdir()
 print(next(i))
 try:
     next(i)
@@ -99,88 +99,88 @@ except StopIteration:
     print("StopIteration")
 
 # referencing the mount point in different ways
-print(os.listdir("test_mnt"))
-print(os.listdir("/test_mnt"))
+print(uos.listdir("test_mnt"))
+print(uos.listdir("/test_mnt"))
 
 # mounting another filesystem
-os.mount(Filesystem(2), "/test_mnt2", readonly=True)
-print(os.listdir())
-print(os.listdir("/test_mnt2"))
+uos.mount(Filesystem(2), "/test_mnt2", readonly=True)
+print(uos.listdir())
+print(uos.listdir("/test_mnt2"))
 
 # mounting over an existing mount point
 try:
-    os.mount(Filesystem(3), "/test_mnt2")
+    uos.mount(Filesystem(3), "/test_mnt2")
 except OSError:
     print("OSError")
 
 # mkdir of a mount point
 try:
-    os.mkdir("/test_mnt")
+    uos.mkdir("/test_mnt")
 except OSError:
     print("OSError")
 
 # rename across a filesystem
 try:
-    os.rename("/test_mnt/a", "/test_mnt2/b")
+    uos.rename("/test_mnt/a", "/test_mnt2/b")
 except OSError:
     print("OSError")
 
 # delegating to mounted filesystem
-os.chdir("test_mnt")
-print(os.listdir())
-print(os.getcwd())
-os.mkdir("test_dir")
-os.remove("test_file")
-os.rename("test_file", "test_file2")
-os.rmdir("test_dir")
-print(os.stat("test_file"))
-print(os.statvfs("/test_mnt"))
+uos.chdir("test_mnt")
+print(uos.listdir())
+print(uos.getcwd())
+uos.mkdir("test_dir")
+uos.remove("test_file")
+uos.rename("test_file", "test_file2")
+uos.rmdir("test_dir")
+print(uos.stat("test_file"))
+print(uos.statvfs("/test_mnt"))
 open("test_file")
 open("test_file", "wb")
 
 # umount
-os.umount("/test_mnt")
-os.umount("/test_mnt2")
+uos.umount("/test_mnt")
+uos.umount("/test_mnt2")
 
 # umount a non-existent mount point
 try:
-    os.umount("/test_mnt")
+    uos.umount("/test_mnt")
 except OSError:
     print("OSError")
 
 # root dir
-os.mount(Filesystem(3), "/")
-print(os.stat("/"))
-print(os.statvfs("/"))
-print(os.listdir())
+uos.mount(Filesystem(3), "/")
+print(uos.stat("/"))
+print(uos.statvfs("/"))
+print(uos.listdir())
 open("test")
 
-os.mount(Filesystem(4), "/mnt")
-print(os.listdir())
-print(os.listdir("/mnt"))
-os.chdir("/mnt")
-print(os.listdir())
+uos.mount(Filesystem(4), "/mnt")
+print(uos.listdir())
+print(uos.listdir("/mnt"))
+uos.chdir("/mnt")
+print(uos.listdir())
 
 # chdir to a subdir within root-mounted vfs, and then listdir
-os.chdir("/subdir")
-print(os.listdir())
-os.chdir("/")
+uos.chdir("/subdir")
+print(uos.listdir())
+uos.chdir("/")
 
-os.umount("/")
-print(os.listdir("/"))
-os.umount("/mnt")
+uos.umount("/")
+print(uos.listdir("/"))
+uos.umount("/mnt")
 
 # chdir to a non-existent mount point (current directory should remain unchanged)
 try:
-    os.chdir("/foo")
+    uos.chdir("/foo")
 except OSError:
     print("OSError")
-print(os.getcwd())
+print(uos.getcwd())
 
 # chdir to a non-existent subdirectory in a mounted filesystem
-os.mount(Filesystem(5, 1), "/mnt")
+uos.mount(Filesystem(5, 1), "/mnt")
 try:
-    os.chdir("/mnt/subdir")
+    uos.chdir("/mnt/subdir")
 except OSError:
     print("OSError")
-print(os.getcwd())
+print(uos.getcwd())

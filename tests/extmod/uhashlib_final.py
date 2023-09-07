@@ -1,12 +1,12 @@
 try:
-    import hashlib
+    import uhashlib
 except ImportError:
     print("SKIP")
     raise SystemExit
 
 
 for algo_name in ("md5", "sha1", "sha256"):
-    algo = getattr(hashlib, algo_name, None)
+    algo = getattr(uhashlib, algo_name, None)
     if not algo:
         continue
 

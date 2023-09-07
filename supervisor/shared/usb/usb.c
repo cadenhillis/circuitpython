@@ -87,8 +87,7 @@ MP_WEAK void post_usb_init(void) {
 void usb_init(void) {
     init_usb_hardware();
 
-    // Only init device. Host gets inited by the `usb_host` module common-hal.
-    tud_init(TUD_OPT_RHPORT);
+    tusb_init();
 
     post_usb_init();
 
@@ -200,7 +199,7 @@ void usb_disconnect(void) {
 
 void usb_background(void) {
     if (usb_enabled()) {
-        #if CFG_TUSB_OS == OPT_OS_NONE || CFG_TUSB_OS == OPT_OS_PICO
+        #if CFG_TUSB_OS == OPT_OS_NONE
         tud_task();
         #if CIRCUITPY_USB_HOST
         tuh_task();
