@@ -1091,6 +1091,15 @@ msgstr ""
 msgid "Hardware busy, try alternative pins"
 msgstr ""
 
+<<<<<<< HEAD
+#: ports/mimxrt10xx/common-hal/busio/SPI.c ports/stm/common-hal/busio/I2C.c
+#: ports/stm/common-hal/busio/SPI.c ports/stm/common-hal/canio/CAN.c
+#: ports/stm/common-hal/sdioio/SDCard.c
+msgid "Hardware busy, try alternative pins"
+msgstr ""
+
+=======
+>>>>>>> 3aca6f302 (initial commit)
 #: ports/mimxrt10xx/common-hal/busio/UART.c ports/stm/common-hal/busio/UART.c
 msgid "Hardware in use, try alternative pins"
 msgstr ""

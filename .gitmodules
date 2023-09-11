@@ -144,9 +144,6 @@
 	path = ports/espressif/esp-idf
 	url = https://github.com/adafruit/esp-idf.git
 	branch = release/v4.4-circuitpython
-[submodule "ports/espressif/certificates/nina-fw"]
-	path = lib/certificates/nina-fw
-	url = https://github.com/adafruit/nina-fw.git
 [submodule "frozen/Adafruit_CircuitPython_ST7789"]
 	path = frozen/Adafruit_CircuitPython_ST7789
 	url = https://github.com/adafruit/Adafruit_CircuitPython_ST7789
@@ -340,8 +337,17 @@
 	url = https://github.com/bablokb/circuitpython-pcf85063a
 [submodule "frozen/Adafruit_CircuitPython_Wave"]
 	path = frozen/Adafruit_CircuitPython_Wave
-	url = http://github.com/adafruit/Adafruit_CircuitPython_Wave.git
-[submodule "ports/raspberrypi/lib/Pico-PIO-USB"]
-	path = ports/raspberrypi/lib/Pico-PIO-USB
-	url = https://github.com/sekigon-gonnoc/Pico-PIO-USB.git
-	branch = main
+	url = https://github.com/adafruit/Adafruit_CircuitPython_Wave.git
+[submodule "lib/certificates"]
+	path = lib/certificates
+	url = https://github.com/adafruit/certificates
+[submodule "frozen/Adafruit_CircuitPython_GPS"]
+	path = frozen/Adafruit_CircuitPython_GPS
+	url = https://github.com/adafruit/Adafruit_CircuitPython_GPS.git
+
+[submodule "frozen/adcs"]
+	path = frozen/adcs 
+	url = git@github.com:Sierra-Lobo/adcs-restructure.git
+[submodule "frozen/pycubed_rfm9x"]
+	path = frozen/pycubed_rfm9x
+	url = https://github.com/adafruit/Adafruit_CircuitPython_RFM9x.git

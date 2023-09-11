@@ -1,5 +1,0 @@
-#define MICROPY_HW_BOARD_NAME "uGame22"
-#define MICROPY_HW_MCU_NAME "rp2040"
-
-#define DEFAULT_I2C_BUS_SDA (&pin_GPIO14)
-#define DEFAULT_I2C_BUS_SCL (&pin_GPIO15)

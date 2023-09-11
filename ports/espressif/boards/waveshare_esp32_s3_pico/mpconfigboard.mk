@@ -3,6 +3,7 @@ USB_PID = 0x81A3
 USB_PRODUCT = "ESP32-S3-Pico"
 USB_MANUFACTURER = "Waveshare Electronics"
 
+
 IDF_TARGET = esp32s3
 
 CIRCUITPY_ESP_FLASH_MODE = dio
