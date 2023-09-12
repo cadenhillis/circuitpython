@@ -36,8 +36,29 @@ STATIC mp_obj_t CircularQueue_make_new(const mp_obj_type_t *type, size_t n_args,
 
 STATIC mp_obj_t CircularQueue_push(mp_obj_t self_in, mp_obj_t new_data)
 {
+	
+	CircularQueue_obj_t* self = MP_OBJ_TO_PTR(self_in);
+	mp_buffer_info_t bufinfo;		
+    if (((MICROPY_PY_BUILTINS_BYTEARRAY)
+         || (MICROPY_PY_ARRAY
+             && (mp_obj_is_type(new_data, &mp_type_bytes)
+                 || (MICROPY_PY_BUILTINS_BYTEARRAY && mp_obj_is_type(new_data, &mp_type_bytearray)))))
+        && mp_get_buffer(new_data, &bufinfo, MP_BUFFER_READ)) {
+        // construct array from raw bytes
+        size_t sz = mp_binary_get_size('@', BYTEARRAY_TYPECODE, NULL);
+        if (bufinfo.len % sz) {
+            mp_raise_ValueError(MP_ERROR_TEXT("bytes length not a multiple of item size"));
+        }
+        size_t len = bufinfo.len / sz;
+        if (len > self->items[0].len) mp_raise_ValueError(MP_ERROR_TEXT("bytes length too bit for cq"));
 
-	return self_in;
+		memcpy(self->items[self->inptr].data, bufinfo.buf, len * sz);
+		
+		self->inptr = (self->inptr+1)%self->capacity;
+		self->curSize+=1;
+		if (self->curSize > self->capacity) self->curSize = self->capacity;
+	}
+	return MP_OBJ_FROM_PTR(self);
 }
 
 MP_DEFINE_CONST_FUN_OBJ_2(CircularQueue_push_obj, CircularQueue_push);
