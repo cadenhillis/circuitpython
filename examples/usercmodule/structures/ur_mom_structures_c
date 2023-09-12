@@ -13,7 +13,7 @@
 #include "py/obj.h"
 #include "py/objarray.h"
 #include "extmod/ulab/code/ndarray.h"
-#include "array.h" 
+#include "s_array.h" 
 #include "circularqueue.h"
 
 
@@ -53,7 +53,7 @@ STATIC mp_obj_t CircularQueue_make_new(const mp_obj_type_t *type, size_t n_args,
 	self->curSize = 0;
 	self->capacity = mp_obj_get_int(args[0]);
 
-	self->items = (Array*) malloc(sizeof(Array)*initElem);
+	self->items = (S_Array*) malloc(sizeof(S_Array)*initElem);
 	uint32_t len = mp_obj_get_int(args[1]);
 	for (int i=0; i<self->capacity; i++)
 	{

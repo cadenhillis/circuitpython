@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-typedef struct Array
+typedef struct S_Array
 {
 	uint8_t* data;
 	uint32_t len;
