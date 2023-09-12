@@ -4,4 +4,4 @@ typedef struct S_Array
 {
 	uint8_t* data;
 	uint32_t len;
-} Array;
+} S_Array;

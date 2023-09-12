@@ -8,7 +8,7 @@
 
 
 
-void initCircularQueue(CircularQueue* cq, uint32_t initSize, uint32_t initElem)
+void initCircularQueue(CircularQueue_obj_t* cq, uint32_t initSize, uint32_t initElem)
 {
 	cq->inptr = 0;
 	cq->outptr = 0;
@@ -24,7 +24,7 @@ void initCircularQueue(CircularQueue* cq, uint32_t initSize, uint32_t initElem)
 }
 
 
-void pushCircularQueue(CircularQueue* cq, uint8_t* buff, uint32_t length)
+void pushCircularQueue(CircularQueue_obj_t* cq, uint8_t* buff, uint32_t length)
 {
 	if (length > cq->items[0].len) return;
 	memcpy(cq->items[cq->inptr].data, buff, length);
@@ -34,7 +34,7 @@ void pushCircularQueue(CircularQueue* cq, uint8_t* buff, uint32_t length)
 }
 
 
-void popCircularQueue(CircularQueue* cq, uint8_t* buff, uint32_t length, uint32_t* transferred)
+void popCircularQueue(CircularQueue_obj_t* cq, uint8_t* buff, uint32_t length, uint32_t* transferred)
 {
 	if (cq->curSize == 0) return;
 	(*transferred) = length > cq->items[0].len ? cq->items[0].len : length;
@@ -43,17 +43,17 @@ void popCircularQueue(CircularQueue* cq, uint8_t* buff, uint32_t length, uint32_
 	cq->curSize-=1;
 }
 
-bool isEmpty(CircularQueue* cq)
+bool isEmpty(CircularQueue_obj_t* cq)
 {
 	return cq->curSize == 0;
 }
 
-int size(CircularQueue* cq)
+int size(CircularQueue_obj_t* cq)
 {
 	return cq->curSize;
 }
 
-void destructCircularQueue(CircularQueue* cq)
+void destructCircularQueue(CircularQueue_obj_t* cq)
 {
 	for (int i=0; i<cq->capacity; i++)
 	{

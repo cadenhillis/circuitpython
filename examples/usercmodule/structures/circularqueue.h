@@ -1,14 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include "array.h"
+#include "s_array.h"
 #include <stdbool.h>
 #include <string.h>
 #include "py/obj.h"
 typedef struct _CircularQueue_obj_t
 {
 	mp_obj_base_t base;
-	Array* items;
+	S_Array* items;
 	
 	uint32_t inptr;
 	uint32_t outptr;
@@ -20,19 +20,19 @@ typedef struct _CircularQueue_obj_t
 const mp_obj_type_t CircularQueue_type;
 
 
-void initCircularQueue(CircularQueue* cq, uint32_t initSize, uint32_t initElem);
+void initCircularQueue(CircularQueue_obj_t* cq, uint32_t initSize, uint32_t initElem);
 
 
-void pushCircularQueue(CircularQueue* cq, uint8_t* buff, uint32_t length); 
+void pushCircularQueue(CircularQueue_obj_t* cq, uint8_t* buff, uint32_t length); 
 
 
-void popCircularQueue(CircularQueue* cq, uint8_t* buff, uint32_t length, uint32_t* transferred);
+void popCircularQueue(CircularQueue_obj_t* cq, uint8_t* buff, uint32_t length, uint32_t* transferred);
 
-bool isEmpty(CircularQueue* cq);
+bool isEmpty(CircularQueue_obj_t* cq);
 
-int size(CircularQueue* cq);
+int size(CircularQueue_obj_t* cq);
 
-void destructCircularQueue(CircularQueue* cq);
+void destructCircularQueue(CircularQueue_obj_t* cq);
 
 
 
