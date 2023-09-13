@@ -47,6 +47,7 @@ typedef struct _adcsSoh_obj_t {
 	ndarray_obj_t* quat;//[4];
 	float adcstime;
 	float timestamp;
+	sqlite3_stmt* stmt; //proof this links properly
 		
 } adcsSoh_obj_t;
 
