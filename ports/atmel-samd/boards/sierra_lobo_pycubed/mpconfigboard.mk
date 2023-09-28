@@ -35,3 +35,4 @@ FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_Register
 FROZEN_MPY_DIRS += $(TOP)/frozen/adcs
 FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_GPS
 FROZEN_MPY_DIRS += $(TOP)/frozen/pycubed_rfm9x
+FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_RockBlock

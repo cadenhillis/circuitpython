@@ -351,3 +351,6 @@
 [submodule "frozen/pycubed_rfm9x"]
 	path = frozen/pycubed_rfm9x
 	url = https://github.com/adafruit/Adafruit_CircuitPython_RFM9x.git
+[submodule "frozen/Adafruit_CircuitPython_RockBlock"]
+	path = frozen/Adafruit_CircuitPython_RockBlock
+	url = git@github.com:adafruit/Adafruit_CircuitPython_RockBlock.git
