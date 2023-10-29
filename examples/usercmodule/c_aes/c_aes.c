@@ -200,15 +200,15 @@ static void AES_init_ctx(struct AES_ctx* ctx, const uint8_t* key)
   KeyExpansion(ctx->RoundKey, key);
 }
 #if (defined(CBC) && (CBC == 1)) || (defined(CTR) && (CTR == 1))
-//static void AES_init_ctx_iv(struct AES_ctx* ctx, const uint8_t* key, const uint8_t* iv)
-//{
- // KeyExpansion(ctx->RoundKey, key);
-  //memcpy (ctx->Iv, iv, AES_BLOCKLEN);
-//}
-//static void AES_ctx_set_iv(struct AES_ctx* ctx, const uint8_t* iv)
-//{
-  //memcpy (ctx->Iv, iv, AES_BLOCKLEN);
-//}
+static void AES_init_ctx_iv(struct AES_ctx* ctx, const uint8_t* key, const uint8_t* iv)
+{
+  KeyExpansion(ctx->RoundKey, key);
+  memcpy (ctx->Iv, iv, AES_BLOCKLEN);
+}
+static void AES_ctx_set_iv(struct AES_ctx* ctx, const uint8_t* iv)
+{
+  memcpy (ctx->Iv, iv, AES_BLOCKLEN);
+}
 #endif
 
 // This function adds the round key to state.
@@ -468,30 +468,30 @@ static void Cipher(state_t* state, const uint8_t* RoundKey)
 #if defined(CBC) && (CBC == 1)
 
 
-//static void XorWithIv(uint8_t* buf, const uint8_t* Iv)
-//{
-//  uint8_t i;
-//  for (i = 0; i < AES_BLOCKLEN; ++i) // The block in AES is always 128bit no matter the key size
-//  {
-//    buf[i] ^= Iv[i];
-//  }
-//}
+static void XorWithIv(uint8_t* buf, const uint8_t* Iv)
+{
+  uint8_t i;
+  for (i = 0; i < AES_BLOCKLEN; ++i) // The block in AES is always 128bit no matter the key size
+  {
+    buf[i] ^= Iv[i];
+  }
+}
 
-//void AES_CBC_encrypt_buffer(struct AES_ctx *ctx, uint8_t* buf, size_t length)
-//{
-//  size_t i;
-//  uint8_t *Iv = ctx->Iv;
-//  for (i = 0; i < length; i += AES_BLOCKLEN)
-//  {
-//    XorWithIv(buf, Iv);
-//    Cipher((state_t*)buf, ctx->RoundKey);
-//    Iv = buf;
-//    buf += AES_BLOCKLEN;
-//  }
-//  /* store Iv in ctx for next call */
-//  memcpy(ctx->Iv, Iv, AES_BLOCKLEN);
-//}
-//
+void AES_CBC_encrypt_buffer(struct AES_ctx *ctx, uint8_t* buf, size_t length)
+{
+  size_t i;
+  uint8_t *Iv = ctx->Iv;
+  for (i = 0; i < length; i += AES_BLOCKLEN)
+  {
+    XorWithIv(buf, Iv);
+    Cipher((state_t*)buf, ctx->RoundKey);
+    Iv = buf;
+    buf += AES_BLOCKLEN;
+  }
+  /* store Iv in ctx for next call */
+  memcpy(ctx->Iv, Iv, AES_BLOCKLEN);
+}
+
 //void AES_CBC_decrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, size_t length)
 //{
 //  size_t i;
@@ -550,6 +550,25 @@ static void AES_CTR_xcrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, size_t leng
 #endif // #if defined(CTR) && (CTR == 1)
 
 ///////////////////////////////////////////////////////
+STATIC mp_obj_array_t *array_new(char typecode, size_t n) {
+    if (typecode == 'x') {
+        mp_raise_ValueError(MP_ERROR_TEXT("bad typecode"));
+    }
+    int typecode_size = mp_binary_get_size('@', typecode, NULL);
+    mp_obj_array_t *o = m_new_obj(mp_obj_array_t);
+    #if MICROPY_PY_BUILTINS_BYTEARRAY && MICROPY_PY_ARRAY
+    o->base.type = (typecode == BYTEARRAY_TYPECODE) ? &mp_type_bytearray : &mp_type_array;
+    #elif MICROPY_PY_BUILTINS_BYTEARRAY
+    o->base.type = &mp_type_bytearray;
+    #else
+    o->base.type = &mp_type_array;
+    #endif
+    o->typecode = typecode;
+    o->free = 0;
+    o->len = n;
+    o->items = m_new(byte, typecode_size * o->len);
+    return o;
+}
 typedef struct _aes_obj_t {
     mp_obj_base_t base;	
 	struct AES_ctx cipher;
@@ -560,7 +579,7 @@ typedef struct _aes_obj_t {
 const mp_obj_type_t aes_type;
 
 STATIC mp_obj_t aes_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_kw, const mp_obj_t *args) {
-    mp_arg_check_num(n_args, n_kw, 1, 1, true);
+    //mp_arg_check_num(n_args, n_kw, 2, 2, true);
     aes_obj_t *self = m_new_obj(aes_obj_t);
 	
 	
@@ -579,15 +598,112 @@ STATIC mp_obj_t aes_make_new(const mp_obj_type_t *type, size_t n_args, size_t n_
         }
         len = bufinfo.len / sz;
 	}
+	if (n_args ==1)
+	{
+		
+	//AES_init_ctx(&(self->cipher), bufinfo.buf);
+    AES_init_ctx(&(self->cipher), bufinfo.buf);
+	self->mode = 1; //ctr mode use xfer
+	self->base.type = &aes_type;
+	return MP_OBJ_FROM_PTR(self);
+	}	
 	
-	if (len !=256) mp_raise_ValueError(MP_ERROR_TEXT("bytes length must be 256"));
-	AES_init_ctx(&(self->cipher), bufinfo.buf);
-    self->mode = 1; //ctr mode use xfer
+	mp_buffer_info_t bufinfo_iv;		
+    if (((MICROPY_PY_BUILTINS_BYTEARRAY)
+         || (MICROPY_PY_ARRAY
+             && (mp_obj_is_type(args[1], &mp_type_bytes)
+                 || (MICROPY_PY_BUILTINS_BYTEARRAY && mp_obj_is_type(args[1], &mp_type_bytearray)))))
+        && mp_get_buffer(args[1], &bufinfo_iv, MP_BUFFER_READ)) {
+        // construct array from raw bytes
+        sz = mp_binary_get_size('@', BYTEARRAY_TYPECODE, NULL);
+        if (bufinfo_iv.len % sz) {
+            mp_raise_ValueError(MP_ERROR_TEXT("bytes length not a multiple of item size"));
+        }
+        len = bufinfo_iv.len / sz;
+	}
+	if (len !=16) mp_raise_ValueError(MP_ERROR_TEXT("IV length must be 16"));
+	//AES_init_ctx(&(self->cipher), bufinfo.buf);
+    AES_init_ctx_iv(&(self->cipher), bufinfo.buf, bufinfo_iv.buf);
+	self->mode = 1; //ctr mode use xfer
 	self->base.type = &aes_type;
 	return MP_OBJ_FROM_PTR(self);
 
 }
 
+STATIC mp_obj_t aes_reset_iv(mp_obj_t self_in, mp_obj_t buff)
+{
+	aes_obj_t* self = MP_OBJ_TO_PTR(self_in);
+	mp_buffer_info_t bufinfo_iv;		
+    size_t sz;
+	if (((MICROPY_PY_BUILTINS_BYTEARRAY)
+         || (MICROPY_PY_ARRAY
+             && (mp_obj_is_type(buff, &mp_type_bytes)
+                 || (MICROPY_PY_BUILTINS_BYTEARRAY && mp_obj_is_type(buff, &mp_type_bytearray)))))
+        && mp_get_buffer(buff, &bufinfo_iv, MP_BUFFER_READ)) {
+        // construct array from raw bytes
+        sz = mp_binary_get_size('@', BYTEARRAY_TYPECODE, NULL);
+        if (bufinfo_iv.len % sz) {
+            mp_raise_ValueError(MP_ERROR_TEXT("bytes length not a multiple of item size"));
+        }
+	}
+	
+	
+	AES_ctx_set_iv(&(self->cipher), bufinfo_iv.buf);
+	return MP_OBJ_FROM_PTR(self);
+}
+STATIC mp_obj_t aes_cbc_encrypt(mp_obj_t self_in, mp_obj_t buff)
+{
+	aes_obj_t *self = MP_OBJ_TO_PTR(self_in);
+	size_t len=0;
+    size_t sz=0;
+	mp_buffer_info_t bufinfo;		
+    if (((MICROPY_PY_BUILTINS_BYTEARRAY)
+         || (MICROPY_PY_ARRAY
+             && (mp_obj_is_type(buff, &mp_type_bytes)
+                 || (MICROPY_PY_BUILTINS_BYTEARRAY && mp_obj_is_type(buff, &mp_type_bytearray)))))
+        && mp_get_buffer(buff, &bufinfo, MP_BUFFER_READ)) {
+        // construct array from raw bytes
+        sz = mp_binary_get_size('@', BYTEARRAY_TYPECODE, NULL);
+        if (bufinfo.len % sz) {
+            mp_raise_ValueError(MP_ERROR_TEXT("bytes length not a multiple of item size"));
+        }
+        len = bufinfo.len / sz;
+	
+		}
+	
+	mp_obj_array_t* buf = array_new(BYTEARRAY_TYPECODE, len);//m_new(byte, sizeof(byte)*len);
+	memcpy(buf->items, bufinfo.buf, len*sz);
+
+	AES_CBC_encrypt_buffer(&(self->cipher), buf->items, len);
+	return MP_OBJ_FROM_PTR(buf);
+}
+
+STATIC mp_obj_t aes_cbc_decrypt(mp_obj_t self_in, mp_obj_t buff)
+{
+	aes_obj_t *self = MP_OBJ_TO_PTR(self_in);
+	size_t len=0;
+    size_t sz=0;
+	mp_buffer_info_t bufinfo;		
+    if (((MICROPY_PY_BUILTINS_BYTEARRAY)
+         || (MICROPY_PY_ARRAY
+             && (mp_obj_is_type(buff, &mp_type_bytes)
+                 || (MICROPY_PY_BUILTINS_BYTEARRAY && mp_obj_is_type(buff, &mp_type_bytearray)))))
+        && mp_get_buffer(buff, &bufinfo, MP_BUFFER_READ)) {
+        // construct array from raw bytes
+        sz = mp_binary_get_size('@', BYTEARRAY_TYPECODE, NULL);
+        if (bufinfo.len % sz) {
+            mp_raise_ValueError(MP_ERROR_TEXT("bytes length not a multiple of item size"));
+        }
+        len = bufinfo.len / sz;
+	
+		}
+	
+	mp_obj_array_t* buf = array_new(BYTEARRAY_TYPECODE, len);//m_new(byte, sizeof(byte)*len);
+	memcpy(buf->items, bufinfo.buf, len*sz);
+
+	AES_CBC_decrypt_buffer(&(self->cipher), buf->items, len);
+	return MP_OBJ_FROM_PTR(buf);
+}
 STATIC mp_obj_t aes_xcrypt(mp_obj_t self_in, mp_obj_t buff)
 {
 
@@ -610,13 +726,16 @@ STATIC mp_obj_t aes_xcrypt(mp_obj_t self_in, mp_obj_t buff)
 	
 		}
 	
-	uint8_t* buf = m_new(byte, sizeof(byte)*len);
-	memcpy(buf, bufinfo.buf, len*sz);
+	mp_obj_array_t* buf = array_new(BYTEARRAY_TYPECODE, len);//m_new(byte, sizeof(byte)*len);
+	memcpy(buf->items, bufinfo.buf, len*sz);
 
-	AES_CTR_xcrypt_buffer(&(self->cipher), buf, len);
+	AES_CTR_xcrypt_buffer(&(self->cipher), buf->items, len);
 	return MP_OBJ_FROM_PTR(buf);
 }
 MP_DEFINE_CONST_FUN_OBJ_2(aes_xcrypt_obj, aes_xcrypt);
+MP_DEFINE_CONST_FUN_OBJ_2(aes_cbc_encrypt_obj, aes_cbc_encrypt);
+MP_DEFINE_CONST_FUN_OBJ_2(aes_cbc_decrypt_obj, aes_cbc_decrypt);
+MP_DEFINE_CONST_FUN_OBJ_2(aes_reset_iv_obj, aes_reset_iv);
 
 const mp_obj_type_t aes_type = {
     { &mp_type_type },
@@ -637,6 +756,9 @@ STATIC const mp_rom_map_elem_t aes_globals_table[] = {
     { MP_OBJ_NEW_QSTR(MP_QSTR___name__), MP_OBJ_NEW_QSTR(MP_QSTR_aes) },
     { MP_OBJ_NEW_QSTR(MP_QSTR_aes), (mp_obj_t)&aes_type },
 	{ MP_OBJ_NEW_QSTR(MP_QSTR_xcrypt), MP_ROM_PTR(&aes_xcrypt_obj) },
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_cbc_encrypt), MP_ROM_PTR(&aes_cbc_encrypt_obj) },
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_cbc_decrypt), MP_ROM_PTR(&aes_cbc_decrypt_obj) },
+	{ MP_OBJ_NEW_QSTR(MP_QSTR_reset_iv), MP_ROM_PTR(&aes_reset_iv_obj) },
 
 };
 //all modules have the dict defined above

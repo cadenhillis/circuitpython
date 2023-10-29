@@ -60,7 +60,7 @@ struct AES_ctx
 static void AES_init_ctx(struct AES_ctx* ctx, const uint8_t* key);
 #if (defined(CBC) && (CBC == 1)) || (defined(CTR) && (CTR == 1))
 //static void AES_init_ctx_iv(struct AES_ctx* ctx, const uint8_t* key, const uint8_t* iv);
-//static void AES_ctx_set_iv(struct AES_ctx* ctx, const uint8_t* iv);
+static void AES_ctx_set_iv(struct AES_ctx* ctx, const uint8_t* iv);
 #endif
 
 #if defined(ECB) && (ECB == 1)
@@ -79,8 +79,8 @@ static void AES_init_ctx(struct AES_ctx* ctx, const uint8_t* key);
 // NOTES: you need to set IV in ctx via AES_init_ctx_iv() or AES_ctx_set_iv()
 //        no IV should ever be reused with the same key 
 
-//static void AES_CBC_encrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, size_t length);
-//void AES_CBC_decrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, size_t length);
+static void AES_CBC_encrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, size_t length);
+void AES_CBC_decrypt_buffer(struct AES_ctx* ctx, uint8_t* buf, size_t length);
 
 #endif // #if defined(CBC) && (CBC == 1)
 
