@@ -348,6 +348,7 @@
 [submodule "frozen/adcs"]
 	path = frozen/adcs 
 	url = git@github.com:Sierra-Lobo/adcs-restructure.git
+	branch = frozen_module
 [submodule "frozen/pycubed_rfm9x"]
 	path = frozen/pycubed_rfm9x
 	url = https://github.com/adafruit/Adafruit_CircuitPython_RFM9x.git
