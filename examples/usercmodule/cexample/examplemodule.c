@@ -48,6 +48,7 @@ typedef struct _adcsSoh_obj_t {
 	float adcstime;
 	float timestamp;
 	sqlite3_stmt* stmt; //proof this links properly
+	sqlite3* ppDb;
 		
 } adcsSoh_obj_t;
 
@@ -65,6 +66,14 @@ STATIC mp_obj_t adcsSoh_make_new(const mp_obj_type_t *type, size_t n_args, size_
 	self->quat = getNumpyArray(args[4]);
 	self->adcstime = mp_obj_get_float(args[5]);
 	self->timestamp = mp_obj_get_float(args[6]);	
+
+	int err = sqlite3_open("test.db", &(self->ppDb));
+	if (err != SQLITE_OK)
+		mp_raise_TypeError(MP_ERROR_TEXT("COULD NOT OPEN DATABASE"));
+	else {
+		mp_raise_TypeError(MP_ERROR_TEXT("OPENED DATABASE"));
+		sqlite3_close(self->ppDb);
+	}
 	return MP_OBJ_FROM_PTR(self);
 }
 //getter only visible to c interface, called by propertyclass_attr
