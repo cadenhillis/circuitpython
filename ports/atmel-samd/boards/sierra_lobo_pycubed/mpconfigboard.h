@@ -1,5 +1,5 @@
 
-#define MICROPY_HW_BOARD_NAME "PyCubed_SLI"
+#define MICROPY_HW_BOARD_NAME "PyCubed_SLI_revC"
 #define MICROPY_HW_MCU_NAME "samd51n20"
 #define CIRCUITPY_MCU_FAMILY samd51
 
