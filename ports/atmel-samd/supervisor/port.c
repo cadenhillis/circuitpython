@@ -356,7 +356,7 @@ safe_mode_t port_init(void) {
     clock_init(BOARD_HAS_CRYSTAL, fine);
     #else
     // Use a default fine value
-    clock_init(BOARD_HAS_CRYSTAL, DEFAULT_DFLL48M_FINE_CALIBRATION, 0, 0);
+    clock_init(BOARD_HAS_CRYSTAL, DEFAULT_DFLL48M_FINE_CALIBRATION);//, 0, 0);
     #endif
 
     rtc_init();

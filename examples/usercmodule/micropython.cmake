@@ -5,6 +5,7 @@
 
 # Add the C example.
 include(${CMAKE_CURRENT_LIST_DIR}/cexample/micropython.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/lora_c_module/micropython.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/structures/micropython.cmake)
 include(${CMAKE_CURRENT_LIST_DIR}/c_aes/micropython.cmake)
 
