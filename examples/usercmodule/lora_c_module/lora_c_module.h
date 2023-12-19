@@ -9,6 +9,8 @@
 #include "shared-bindings/microcontroller/Pin.h"
 #include <stdint.h>
 #include "shared-bindings/microcontroller/__init__.h"
+#include "py/mphal.h"
+#include "supervisor/shared/tick.h"
 
 #define _RH_RF95_REG_00_FIFO  (0x00)
 #define _RH_RF95_REG_01_OP_MODE  (0x01)
@@ -110,7 +112,7 @@ typedef struct {
 		float last_rssi;
 		float ack_wait;
 		float receive_timeout;
-		float xmit_timeout;
+		uint64_t xmit_timeout;
 		uint8_t ack_retries;
 		uint8_t ack_delay;
 
@@ -143,6 +145,7 @@ typedef struct {
 		registerBits auto_agc;
 
 
+		uint8_t payload[256];
 
 } lora_driver_obj_t;
 
@@ -159,3 +162,6 @@ uint8_t get_register(registerBits* rb, busio_spi_obj_t* spi);
 void set_register(registerBits* rb, busio_spi_obj_t* spi, uint8_t val);
 
 void set_tx_power(lora_driver_obj_t* self, uint8_t val);
+void lora_listen(lora_driver_obj_t* self);
+void lora_transmit(lora_driver_obj_t* self);
+uint8_t lora_tx_done(lora_driver_obj_t* self);

@@ -30,6 +30,24 @@ STATIC void initRegisterBits(registerBits* rb, uint8_t address, uint8_t offset, 
 
 }
 
+uint8_t lora_tx_done(lora_driver_obj_t* self)
+{
+	uint8_t reg_value ; 
+	common_hal_busio_spi_read(self->spi, &reg_value, 1, _RH_RF95_REG_12_IRQ_FLAGS);
+	return (reg_value & 0x8) >> 3;
+}
+
+void lora_listen(lora_driver_obj_t* self)
+{
+	set_register(&self->operation_mode, self->spi, RX_MODE);
+	set_register(&self->dio0_mapping, self->spi, 0);
+}
+
+void lora_transmit(lora_driver_obj_t* self)
+{
+	set_register(&self->operation_mode, self->spi, TX_MODE);
+	set_register(&self->dio0_mapping, self->spi, 1);
+}
 
 void set_tx_power(lora_driver_obj_t* self, uint8_t val)
 {
@@ -219,7 +237,7 @@ STATIC mp_obj_t lora_driver_make_new(const mp_obj_type_t *type, size_t n_args, s
 
 	self->ack_wait = 0.5;
 	self->receive_timeout = .5;
-	self->xmit_timeout = 2.0;
+	self->xmit_timeout = 2;
 	self->ack_retries = 5;
 	self->ack_delay = 0;
 	self->sequence_number = 0;
@@ -249,42 +267,88 @@ STATIC mp_obj_t lora_driver_send(size_t n_args, const mp_obj_t *args) {
 //STATIC mp_obj_t lora_driver_send(mp_obj_t self_in, mp_obj_t data, mp_obj_t keep_listening, mp_obj_t destination, mp_obj_t node, mp_obj_t identifier, mp_obj_t flags) {
     //lora_driver_obj_t *self = m_new_obj(lora_driver_obj_t);
 
-	int err = 0;
+	//parameters:
+	//self, data, keep_listening, destination,node,identifier,flags
+
+	lora_driver_obj_t* self =  MP_OBJ_FROM_PTR(args[0]);
 
 	//get data buffer
-	
 	mp_buffer_info_t bufinfo;		
-    if (((MICROPY_PY_BUILTINS_BYTEARRAY)
+    size_t len, sz;
+	if (((MICROPY_PY_BUILTINS_BYTEARRAY)
          || (MICROPY_PY_ARRAY
              && (mp_obj_is_type(args[1], &mp_type_bytes)
                  || (MICROPY_PY_BUILTINS_BYTEARRAY && mp_obj_is_type(args[1], &mp_type_bytearray)))))
         && mp_get_buffer(args[1], &bufinfo, MP_BUFFER_READ)) {
         // construct array from raw bytes
-        size_t sz = mp_binary_get_size('@', BYTEARRAY_TYPECODE, NULL);
+        sz = mp_binary_get_size('@', BYTEARRAY_TYPECODE, NULL);
         if (bufinfo.len % sz) {
             mp_raise_ValueError(MP_ERROR_TEXT("bytes length not a multiple of item size"));
         }
-        //size_t len = bufinfo.len / sz;
-
+        len = bufinfo.len / sz;
+		if (len >252) mp_raise_ValueError(MP_ERROR_TEXT("data must be 252 bytes or less"));
 		//memcpy(self->items[self->inptr].data, bufinfo.buf, len * sz);
 		
 	}
 
-	/*
-	 * common_hal_busio_spi_write(self->bus, bufinfo.buf, len*sz);
-	 * common_hal_busio_spi_read(self->bus, cmdbuf, NUM_BYTES, ADDRESS);
-	*/
-
-	//set to idle mode
-	//RH_RF95_REG_01_OP_MODE, BITS=3) = STANDBY_MODE
-	// reg 0X01 value 1
-	//
 	
-	//_write_u8(_RH_RF95_REG_0F_FIFO_ADDR_PTR, 0X00)
-	//_write_u8 -> buffer = {(address | 0x80) & 0xFF, value & 0xFF}, write(buffer, end=2)
-	
+	bool keep_listening = mp_obj_get_int(args[2]);
+	uint8_t destination = mp_obj_get_int(args[3]);
+	uint8_t node = mp_obj_get_int(args[4]);
+	uint8_t identifier = mp_obj_get_int(args[5]);
+	uint8_t flags = mp_obj_get_int(args[6]);
 
-    return mp_obj_new_int(err);
+	idle(self);
+
+
+
+
+	uint8_t buf[] = {_RH_RF95_REG_0D_FIFO_ADDR_PTR, 0};
+	common_hal_busio_spi_write(self->spi, buf, 2);
+
+	if (destination) self->payload[0] = destination;
+	else self->payload[0] = self->destination;
+	
+	if (node) self->payload[1] = node;
+	else self->payload[1] = self->node;
+	
+	if (identifier) self->payload[2] = identifier;
+	else self->payload[2] = self->identifier;
+
+	if (flags) self->payload[3] = flags;
+	else self->payload[3] = self->flags;
+	
+	memcpy(self->payload + 4, bufinfo.buf, len*sz);
+
+	len+=4;
+
+	//_write_from
+	buf[0] = (_RH_RF95_REG_00_FIFO | 0x80) & 0xFF;
+	common_hal_busio_spi_write(self->spi, buf, 1);
+	common_hal_busio_spi_write(self->spi, self->payload, len);
+	buf[0] = _RH_RF95_REG_22_PAYLOAD_LENGTH;
+	buf[1] = len;
+	common_hal_busio_spi_write(self->spi, buf, 2);
+
+	lora_transmit(self);
+
+
+
+	//timeout stuff
+	bool timed_out = false;
+	uint64_t start = supervisor_ticks_ms64();//common_hal_time_monotonic_ms();// mp_hal_time_ns(); //time.monotinic
+	while (!timed_out && !lora_tx_done(self)) {
+		if (supervisor_ticks_ms64() - start >= self->xmit_timeout) timed_out = true;
+	}
+	
+	if (keep_listening) lora_listen(self);
+	else idle(self);
+
+
+	buf[0] = _RH_RF95_REG_12_IRQ_FLAGS;
+	buf[1] = 0xFF;
+	common_hal_busio_spi_write(self->spi, buf, 2);
+    return mp_obj_new_int(timed_out);
 }
 
 //define object with one parameter
