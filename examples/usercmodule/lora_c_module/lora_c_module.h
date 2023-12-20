@@ -11,6 +11,7 @@
 #include "shared-bindings/microcontroller/__init__.h"
 #include "py/mphal.h"
 #include "supervisor/shared/tick.h"
+#include "py/objarray.h"
 
 #define _RH_RF95_REG_00_FIFO  (0x00)
 #define _RH_RF95_REG_01_OP_MODE  (0x01)
@@ -109,7 +110,7 @@ typedef struct {
 
 		uint32_t tx_power;
 
-		float last_rssi;
+		int16_t last_rssi;
 		float ack_wait;
 		float receive_timeout;
 		uint64_t xmit_timeout;
@@ -146,7 +147,8 @@ typedef struct {
 
 
 		uint8_t payload[256];
-
+		uint8_t packet[256];
+		uint8_t buf[2];
 } lora_driver_obj_t;
 
 
@@ -158,10 +160,19 @@ void lora_reset(lora_driver_obj_t* self);
 void lora_sleep(lora_driver_obj_t* self);
 void idle(lora_driver_obj_t* self);
 
-uint8_t get_register(registerBits* rb, busio_spi_obj_t* spi);
-void set_register(registerBits* rb, busio_spi_obj_t* spi, uint8_t val);
+uint8_t get_register(lora_driver_obj_t* self, registerBits* rb, busio_spi_obj_t* spi);
+void set_register(lora_driver_obj_t* self, registerBits* rb, busio_spi_obj_t* spi, uint8_t val);
 
 void set_tx_power(lora_driver_obj_t* self, uint8_t val);
 void lora_listen(lora_driver_obj_t* self);
 void lora_transmit(lora_driver_obj_t* self);
 uint8_t lora_tx_done(lora_driver_obj_t* self);
+uint8_t lora_rx_done(lora_driver_obj_t* self);
+bool lora_crc_error(lora_driver_obj_t* self);
+int16_t lora_rssi(lora_driver_obj_t* self, bool raw);
+STATIC mp_obj_array_t *array_new(char typecode, size_t n);
+void lora_send_ack(lora_driver_obj_t* self,uint8_t destination, uint8_t node, uint8_t identifier, uint8_t flags, bool keep_listening);
+void write_byte(lora_driver_obj_t* self, uint8_t reg, uint8_t val);
+uint8_t read_byte(lora_driver_obj_t* self, uint8_t reg);
+void write_bytes(lora_driver_obj_t* self, uint8_t reg, uint8_t* val, size_t len);
+void read_bytes(lora_driver_obj_t* self, uint8_t reg, uint8_t* buf, size_t len);
