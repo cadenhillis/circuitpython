@@ -160,8 +160,8 @@ void lora_reset(lora_driver_obj_t* self);
 void lora_sleep(lora_driver_obj_t* self);
 void idle(lora_driver_obj_t* self);
 
-uint8_t get_register(lora_driver_obj_t* self, registerBits* rb, busio_spi_obj_t* spi);
-void set_register(lora_driver_obj_t* self, registerBits* rb, busio_spi_obj_t* spi, uint8_t val);
+uint8_t get_register(lora_driver_obj_t* self, registerBits* rb);
+void set_register(lora_driver_obj_t* self, registerBits* rb,  uint8_t val);
 
 void set_tx_power(lora_driver_obj_t* self, uint8_t val);
 void lora_listen(lora_driver_obj_t* self);
@@ -171,7 +171,7 @@ uint8_t lora_rx_done(lora_driver_obj_t* self);
 bool lora_crc_error(lora_driver_obj_t* self);
 int16_t lora_rssi(lora_driver_obj_t* self, bool raw);
 STATIC mp_obj_array_t *array_new(char typecode, size_t n);
-void lora_send_ack(lora_driver_obj_t* self,uint8_t destination, uint8_t node, uint8_t identifier, uint8_t flags, bool keep_listening);
+bool lora_send_ack(lora_driver_obj_t* self,uint8_t destination, uint8_t node, uint8_t identifier, uint8_t flags, bool keep_listening);
 void write_byte(lora_driver_obj_t* self, uint8_t reg, uint8_t val);
 uint8_t read_byte(lora_driver_obj_t* self, uint8_t reg);
 void write_bytes(lora_driver_obj_t* self, uint8_t reg, uint8_t* val, size_t len);

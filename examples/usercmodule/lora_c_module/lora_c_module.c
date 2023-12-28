@@ -17,9 +17,9 @@
 
 
 
-
 /*
  * @brief write byte over spi bus to lora
+ * should mimic def _write_u8(self,address,val):
  * @param self: pointer to lora driver struct
  * @param reg: register to be written to
  * @param val: value to be written to the aformentioned register
@@ -29,8 +29,8 @@
 void write_byte(lora_driver_obj_t* self, uint8_t reg, uint8_t val)
 {
 	common_hal_digitalio_digitalinout_set_value(self->cs, false);
-	self->buf[0] = reg;
-	self->buf[1] = val;	
+	self->buf[0] = (reg | 0x80) & 0xFF;
+	self->buf[1] = val & 0xFF;	
 	common_hal_busio_spi_write(self->spi, self->buf, 2);
 	common_hal_digitalio_digitalinout_set_value(self->cs, true);
 }
@@ -38,6 +38,7 @@ void write_byte(lora_driver_obj_t* self, uint8_t reg, uint8_t val)
 
 /*
  * @brief write bytes over spi bus to lora
+ * should mimic _write_from*self, addresss, buf, length=None)
  * @param self: pointer to lora driver struct
  * @param reg: register to be written to
  * @param val: array of values to be written to the aformentioned register
@@ -48,6 +49,7 @@ void write_byte(lora_driver_obj_t* self, uint8_t reg, uint8_t val)
 void write_bytes(lora_driver_obj_t* self, uint8_t reg, uint8_t* val, size_t len)
 {
 	common_hal_digitalio_digitalinout_set_value(self->cs, false);
+	reg = (reg | 0x80) | 0xFF;
 	common_hal_busio_spi_write(self->spi, &reg, 1);
 	common_hal_busio_spi_write(self->spi, val, len);
 	common_hal_digitalio_digitalinout_set_value(self->cs, true);
@@ -75,6 +77,7 @@ uint8_t read_byte(lora_driver_obj_t* self, uint8_t reg)
 
 /*
  * @brief read bytes over spi bus to lora
+ * should mimic _read_into(self, addresss, buf, length=None):
  * @param self: pointer to lora driver struct
  * @param reg: register to be written to
  * @param buf: destination array
@@ -86,6 +89,7 @@ void read_bytes(lora_driver_obj_t* self, uint8_t reg, uint8_t* buf, size_t len)
 {
 
 	common_hal_digitalio_digitalinout_set_value(self->cs, false);
+	reg &=0x7F;
 	common_hal_busio_spi_read(self->spi, buf,len, reg);
 	common_hal_digitalio_digitalinout_set_value(self->cs, true);
 }
@@ -134,7 +138,7 @@ STATIC mp_obj_array_t *array_new(char typecode, size_t n) {
  * @author Owen DelBene
  * @date 12/20/2023
  */
-void lora_send_ack(lora_driver_obj_t* self,uint8_t destination, uint8_t node, uint8_t identifier, uint8_t flags, bool keep_listening)
+bool lora_send_ack(lora_driver_obj_t* self,uint8_t destination, uint8_t node, uint8_t identifier, uint8_t flags, bool keep_listening)
 {
 
 	idle(self);
@@ -143,8 +147,6 @@ void lora_send_ack(lora_driver_obj_t* self,uint8_t destination, uint8_t node, ui
 	uint8_t len = 5;
 
 	
-	//uint8_t buf[] = {_RH_RF95_REG_0D_FIFO_ADDR_PTR, 0};
-	//common_hal_busio_spi_write(self->spi, buf, 2);
 	write_byte(self, _RH_RF95_REG_0D_FIFO_ADDR_PTR, 0);
 	
 	if (destination) self->payload[0] = destination;
@@ -159,18 +161,12 @@ void lora_send_ack(lora_driver_obj_t* self,uint8_t destination, uint8_t node, ui
 	if (flags) self->payload[3] = flags;
 	else self->payload[3] = self->flags;
 
-	uint8_t data = 33; //b'!'	
-	memcpy(self->payload + 4, &data, 1);
-
+	uint8_t data = 33; //b'!', the ACK code for lora	
+	self->payload[4] = data;
 
 	//_write_from
-	//buf[0] = (_RH_RF95_REG_00_FIFO | 0x80) & 0xFF;
-	//common_hal_busio_spi_write(self->spi, buf, 1);
-	//common_hal_busio_spi_write(self->spi, self->payload, len);
 	write_bytes(self, _RH_RF95_REG_00_FIFO, self->payload, len); 
-	//buf[0] = _RH_RF95_REG_22_PAYLOAD_LENGTH;
-	//buf[1] = len;
-	//common_hal_busio_spi_write(self->spi, buf, 2);
+	
 	write_byte(self, _RH_RF95_REG_22_PAYLOAD_LENGTH, len);
 	lora_transmit(self);
 
@@ -178,7 +174,7 @@ void lora_send_ack(lora_driver_obj_t* self,uint8_t destination, uint8_t node, ui
 
 	//timeout stuff
 	bool timed_out = false;
-	uint64_t start = supervisor_ticks_ms64();//common_hal_time_monotonic_ms();// mp_hal_time_ns(); //time.monotinic
+	uint64_t start = supervisor_ticks_ms64();
 	while (!timed_out && !lora_tx_done(self)) {
 		if (supervisor_ticks_ms64() - start >= self->xmit_timeout) timed_out = true;
 	}
@@ -187,10 +183,8 @@ void lora_send_ack(lora_driver_obj_t* self,uint8_t destination, uint8_t node, ui
 	else idle(self);
 
 
-	//buf[0] = _RH_RF95_REG_12_IRQ_FLAGS;
-	//buf[1] = 0xFF;
-	//common_hal_busio_spi_write(self->spi, buf, 2);
 	write_byte(self, _RH_RF95_REG_12_IRQ_FLAGS, 0xFF);
+	return !timed_out;
 }
 
 
@@ -229,8 +223,7 @@ STATIC void initRegisterBits(registerBits* rb, uint8_t address, uint8_t offset, 
  */
 bool lora_crc_error(lora_driver_obj_t* self)
 {
-	uint8_t reg_value ; 
-//	common_hal_busio_spi_read(self->spi, &reg_value, 1, _RH_RF95_REG_12_IRQ_FLAGS);
+	uint8_t reg_value; 
 	
 	reg_value = read_byte(self, _RH_RF95_REG_12_IRQ_FLAGS);
 	return (reg_value & 0x20) >> 5;
@@ -250,7 +243,6 @@ int16_t lora_rssi(lora_driver_obj_t* self, bool raw)
 {
 	
 	uint8_t reg_value ; 
-	//common_hal_busio_spi_read(self->spi, &reg_value, 1, _RH_RF95_REG_1A_PKT_RSSI_VALUE);
 	reg_value = read_byte(self, _RH_RF95_REG_1A_PKT_RSSI_VALUE); 
 	if (raw) return reg_value;
 	return reg_value - 137;
@@ -266,7 +258,6 @@ int16_t lora_rssi(lora_driver_obj_t* self, bool raw)
 uint8_t lora_tx_done(lora_driver_obj_t* self)
 {
 	uint8_t reg_value ; 
-	//common_hal_busio_spi_read(self->spi, &reg_value, 1, _RH_RF95_REG_12_IRQ_FLAGS);
 	reg_value = read_byte(self, _RH_RF95_REG_12_IRQ_FLAGS);
 	return (reg_value & 0x8) >> 3;
 }
@@ -296,8 +287,8 @@ uint8_t lora_rx_done(lora_driver_obj_t* self)
  */
 void lora_listen(lora_driver_obj_t* self)
 {
-	set_register(self, &self->operation_mode, self->spi, RX_MODE);
-	set_register(self, &self->dio0_mapping, self->spi, 0);
+	set_register(self, &self->operation_mode,  RX_MODE);
+	set_register(self, &self->dio0_mapping,  0);
 }
 
 /*
@@ -308,8 +299,8 @@ void lora_listen(lora_driver_obj_t* self)
  */
 void lora_transmit(lora_driver_obj_t* self)
 {
-	set_register(self, &self->operation_mode, self->spi, TX_MODE);
-	set_register(self, &self->dio0_mapping, self->spi, 1);
+	set_register(self, &self->operation_mode,  TX_MODE);
+	set_register(self, &self->dio0_mapping,  1);
 }
 
 /*
@@ -322,34 +313,31 @@ void lora_transmit(lora_driver_obj_t* self)
 void set_tx_power(lora_driver_obj_t* self, uint8_t val)
 {
 	if (self->max_output) {
-	//uint8_t buf[] = {_RH_RF95_REG_0B_OCP, 0x3F};
-	//common_hal_busio_spi_write(self->spi, buf, 2);
 	write_byte(self, _RH_RF95_REG_0B_OCP, 0x3F);
-	set_register(self, &self->pa_dac, self->spi, _RH_RF95_PA_DAC_ENABLE);	
-	set_register(self, &self->pa_select, self->spi, 1);
-	set_register(self, &self->max_power, self->spi, 7);
-	set_register(self, &self->output_power, self->spi, 0x0F);
-	//NOT DONE!
+	set_register(self, &self->pa_dac,  _RH_RF95_PA_DAC_ENABLE);	
+	set_register(self, &self->pa_select,  1);
+	set_register(self, &self->max_power, 7);
+	set_register(self, &self->output_power,  0x0F);
 	}
 	else if (self->high_power) {
 		if (val < 5 || val > 23) mp_raise_ValueError(MP_ERROR_TEXT("tx power must be between 5 and 23"));
 		if (val > 20) {
-			set_register(self, &self->pa_dac, self->spi, _RH_RF95_PA_DAC_ENABLE);	
+			set_register(self, &self->pa_dac,  _RH_RF95_PA_DAC_ENABLE);	
 			val-=3;
 		}
 		else {
-			set_register(self, &self->pa_dac, self->spi, _RH_RF95_PA_DAC_DISABLE);	
+			set_register(self, &self->pa_dac,  _RH_RF95_PA_DAC_DISABLE);	
 		}
 
-		set_register(self, &self->pa_select, self->spi, 1);
-		set_register(self, &self->max_power, self->spi, (val - 5) & 0x0F);
+		set_register(self, &self->pa_select,  1);
+		set_register(self, &self->max_power,  (val - 5) & 0x0F);
 		
 	 }
 
 	else {
-		set_register(self, &self->pa_select, self->spi, 0);
-		set_register(self, &self->max_power, self->spi, 7);
-		set_register(self, &self->output_power, self->spi, (val + 1) & 0x0F);
+		set_register(self, &self->pa_select,  0);
+		set_register(self, &self->max_power,  7);
+		set_register(self, &self->output_power,  (val + 1) & 0x0F);
 		
 	}
 }
@@ -377,7 +365,7 @@ void lora_reset(lora_driver_obj_t* self)
 void lora_sleep(lora_driver_obj_t* self)
 {
 
-	set_register(self, &self->operation_mode, self->spi, SLEEP_MODE); 
+	set_register(self, &self->operation_mode,  SLEEP_MODE); 
 }
 
 /*
@@ -388,7 +376,7 @@ void lora_sleep(lora_driver_obj_t* self)
  */
 void idle(lora_driver_obj_t* self)
 {
-	set_register(self, &self->operation_mode, self->spi, STANDBY_MODE); 
+	set_register(self, &self->operation_mode,  STANDBY_MODE); 
 }
 
 
@@ -396,16 +384,13 @@ void idle(lora_driver_obj_t* self)
  * @brief get the value from a register bit, mimics registerbits.__get__()
  * @param self: pointer to lora driver struct
  * @param rb: pointer to registerBits struct
- * @param spi: spi bus
  * @returns the value stored in the register with mask/offset specified by registerBits
  * @author Owen DelBene
  * @date 12/20/2023
  */
-uint8_t get_register(lora_driver_obj_t* self, registerBits* rb, busio_spi_obj_t* spi)
+uint8_t get_register(lora_driver_obj_t* self, registerBits* rb )
 {
-	uint8_t reg_value;
-	//common_hal_busio_spi_read(spi, &reg_value, 1, rb->address);
-	reg_value = read_byte(self, rb->address);
+	uint8_t reg_value =  read_byte(self, rb->address);
 	return (reg_value & rb->mask) >> rb->offset;
 }
 
@@ -418,16 +403,12 @@ uint8_t get_register(lora_driver_obj_t* self, registerBits* rb, busio_spi_obj_t*
  * @author Owen DelBene
  * @date 12/20/2023
  */
-void set_register(lora_driver_obj_t* self, registerBits* rb, busio_spi_obj_t* spi, uint8_t val)
+void set_register(lora_driver_obj_t* self, registerBits* rb, uint8_t val)
 {
-	uint8_t reg_value;
-	//common_hal_busio_spi_read(spi, &reg_value, 1, rb->address);
-	reg_value = read_byte(self, rb->address);
+	uint8_t reg_value = read_byte(self, rb->address);
 	reg_value &= ~rb->mask;
 	reg_value |= (val & 0xFF) << rb->offset;
-	//uint8_t write_val[] = {(rb->address | 0x80) & 0xFF, reg_value};
-	//common_hal_busio_spi_write(spi, write_val, 2);
-	write_byte(self,rb->address | 0x80, reg_value );
+	write_byte(self,rb->address , reg_value );
 }
 
 /*
@@ -450,23 +431,15 @@ STATIC mp_obj_t lora_driver_make_new(const mp_obj_type_t *type, size_t n_args, s
     lora_driver_obj_t *self = m_new_obj(lora_driver_obj_t);
     self->base.type = &lora_driver_type;
 
-/*	
-	enum { ARG_spi, ARG_cs, ARG_rst, NUM_ARGS };
-    static const mp_arg_t allowed_args[] = {
-        { MP_QSTR_spi, MP_ARG_OBJ, {.u_obj = mp_const_none } },
-        { MP_QSTR_cs, MP_ARG_OBJ, {.u_obj = mp_const_none } },
-        { MP_QSTR_rst, MP_ARG_OBJ, {.u_obj = mp_const_none} },
-    };
-*/
-	//mp_arg_val_t args2[MP_ARRAY_SIZE(allowed_args)];
-	//mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, args2);
 
 
 
 
 	
-	//busio_spi_obj_t *spi = validate_obj_is_spi_bus(args[0], MP_QSTR_spi);
 	self->spi = MP_OBJ_TO_PTR(args[0]);
+	self->cs = MP_OBJ_TO_PTR(args[1]);
+	self->rst = MP_OBJ_TO_PTR(args[2]);
+	/*
 	const mcu_pin_obj_t* cs = MP_OBJ_TO_PTR(args[1]);
 	const mcu_pin_obj_t* rst = MP_OBJ_TO_PTR(args[2]);
 	digitalinout_result_t result = common_hal_digitalio_digitalinout_construct(self->cs, cs);
@@ -479,10 +452,7 @@ STATIC mp_obj_t lora_driver_make_new(const mp_obj_type_t *type, size_t n_args, s
     if (result != DIGITALINOUT_OK) {
         mp_raise_ValueError_varg(MP_ERROR_TEXT("%q init failed"), MP_QSTR_cs);
     }
-	mp_raise_ValueError(MP_ERROR_TEXT("initialized the thing"));
-//	self->cs = MP_OBJ_TO_PTR(args[1]);
-//	mp_raise_ValueError(MP_ERROR_TEXT("initialized first two things"));
-//	self->rst = MP_OBJ_TO_PTR(args[2]);
+	*/
 	mp_raise_ValueError(MP_ERROR_TEXT("initialized first three things"));
 	self->frequency_mhz = mp_obj_get_int(args[3]);
 	self->preamble_length = mp_obj_get_int(args[4]);
@@ -530,20 +500,20 @@ STATIC mp_obj_t lora_driver_make_new(const mp_obj_type_t *type, size_t n_args, s
 	idle(self);
 	common_hal_mcu_delay_us(1000);
 	//sleep(.01); //time.sleep(.01)
-	set_register(self, &self->osc_calibration, self->spi, 1);
+	set_register(self, &self->osc_calibration,  1);
 	
 	common_hal_mcu_delay_us(1000);//sleep(1);
 
 	//self.sleep()
 	lora_sleep(self);
 	common_hal_mcu_delay_us(1000);// sleep(.01); //time.sleep(.01)
-	set_register(self, &self->long_range_mode, self->spi, 1);
-	if (get_register(self, &self->operation_mode, self->spi) != SLEEP_MODE || !(get_register(self, &self->long_range_mode, self->spi)))
+	set_register(self, &self->long_range_mode,  1);
+	if (get_register(self, &self->operation_mode ) != SLEEP_MODE || !(get_register(self, &self->long_range_mode )))
 		mp_raise_ValueError(MP_ERROR_TEXT("failed to configure rfm9x for lora mode. Check wiring"));
-	if (get_register(self, &self->operation_mode, self->spi) != SLEEP_MODE)
+	if (get_register(self, &self->operation_mode ) != SLEEP_MODE)
 		mp_raise_ValueError(MP_ERROR_TEXT("failed to configure rfm9x for lora mode"));
 	
-	if (self->frequency_mhz > 525) set_register(self, &self->low_frequency_mode, self->spi,0);
+	if (self->frequency_mhz > 525) set_register(self, &self->low_frequency_mode, 0);
 
 	//uint8_t buffer[] = {_RH_RF95_REG_0E_FIFO_TX_BASE_ADDR, 0, _RH_RF95_REG_0F_FIFO_RX_BASE_ADDR, 0, _RH_RF95_REG_24_HOP_PERIOD, 0};
 
@@ -584,9 +554,9 @@ STATIC mp_obj_t lora_driver_make_new(const mp_obj_type_t *type, size_t n_args, s
 	self->flags = 0;
 	self->crc_error_count = 0;
 
-	set_register(self, &self->auto_agc, self->spi, 1);
-	set_register(self, &self->pa_ramp, self->spi, 0);
-	set_register(self, &self->lna_boost, self->spi, 1);
+	set_register(self, &self->auto_agc, 1);
+	set_register(self, &self->pa_ramp,  0);
+	set_register(self, &self->lna_boost,1);
 
 	return MP_OBJ_FROM_PTR(self);
 }
