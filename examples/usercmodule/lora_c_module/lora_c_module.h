@@ -90,8 +90,8 @@ typedef struct {
 
 
 		busio_spi_obj_t *spi;
-		digitalio_digitalinout_obj_t* cs;
-		digitalio_digitalinout_obj_t* rst;
+		digitalio_digitalinout_obj_t cs;
+		digitalio_digitalinout_obj_t rst;
 		uint32_t frequency_mhz;
 		uint8_t polarity;
 		uint8_t phase;

@@ -28,11 +28,11 @@
  */
 void write_byte(lora_driver_obj_t* self, uint8_t reg, uint8_t val)
 {
-	common_hal_digitalio_digitalinout_set_value(self->cs, false);
+	common_hal_digitalio_digitalinout_set_value(&self->cs, false);
 	self->buf[0] = (reg | 0x80) & 0xFF;
 	self->buf[1] = val & 0xFF;	
 	common_hal_busio_spi_write(self->spi, self->buf, 2);
-	common_hal_digitalio_digitalinout_set_value(self->cs, true);
+	common_hal_digitalio_digitalinout_set_value(&self->cs, true);
 }
 
 
@@ -48,11 +48,11 @@ void write_byte(lora_driver_obj_t* self, uint8_t reg, uint8_t val)
  */
 void write_bytes(lora_driver_obj_t* self, uint8_t reg, uint8_t* val, size_t len)
 {
-	common_hal_digitalio_digitalinout_set_value(self->cs, false);
+	common_hal_digitalio_digitalinout_set_value(&self->cs, false);
 	reg = (reg | 0x80) | 0xFF;
 	common_hal_busio_spi_write(self->spi, &reg, 1);
 	common_hal_busio_spi_write(self->spi, val, len);
-	common_hal_digitalio_digitalinout_set_value(self->cs, true);
+	common_hal_digitalio_digitalinout_set_value(&self->cs, true);
 }
 
 
@@ -67,10 +67,10 @@ void write_bytes(lora_driver_obj_t* self, uint8_t reg, uint8_t* val, size_t len)
 uint8_t read_byte(lora_driver_obj_t* self, uint8_t reg)
 {
 
-	common_hal_digitalio_digitalinout_set_value(self->cs, false);
+	common_hal_digitalio_digitalinout_set_value(&self->cs, false);
 	uint8_t retval;
 	common_hal_busio_spi_read(self->spi, &retval,1, reg);
-	common_hal_digitalio_digitalinout_set_value(self->cs, true);
+	common_hal_digitalio_digitalinout_set_value(&self->cs, true);
 	return retval;
 }
 
@@ -88,10 +88,10 @@ uint8_t read_byte(lora_driver_obj_t* self, uint8_t reg)
 void read_bytes(lora_driver_obj_t* self, uint8_t reg, uint8_t* buf, size_t len)
 {
 
-	common_hal_digitalio_digitalinout_set_value(self->cs, false);
+	common_hal_digitalio_digitalinout_set_value(&self->cs, false);
 	reg &=0x7F;
 	common_hal_busio_spi_read(self->spi, buf,len, reg);
-	common_hal_digitalio_digitalinout_set_value(self->cs, true);
+	common_hal_digitalio_digitalinout_set_value(&self->cs, true);
 }
 
 
@@ -350,9 +350,9 @@ void set_tx_power(lora_driver_obj_t* self, uint8_t val)
  */
 void lora_reset(lora_driver_obj_t* self)
 {
-	common_hal_digitalio_digitalinout_switch_to_output(self->rst, false, PULL_UP);
+	common_hal_digitalio_digitalinout_switch_to_output(&self->rst, false, PULL_UP);
 	common_hal_mcu_delay_us(100);
-	common_hal_digitalio_digitalinout_switch_to_input(self->rst,PULL_UP );
+	common_hal_digitalio_digitalinout_switch_to_input(&self->rst,PULL_UP );
 	common_hal_mcu_delay_us(5000);
 }
 
@@ -432,34 +432,43 @@ STATIC mp_obj_t lora_driver_make_new(const mp_obj_type_t *type, size_t n_args, s
     self->base.type = &lora_driver_type;
 
 
-
-
+	enum {ARG_spi, ARG_cs, ARG_rst, ARG_freq, ARG_code_rate, ARG_baudrate, NUM_ARGS};
+	static const mp_arg_t allowed_args[] = {
+		{MP_QSTR_spi, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_cs, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_rst, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_freq, MP_ARG_INT, {.u_int = 0}},
+		{MP_QSTR_code_rate, MP_ARG_INT, {.u_int = 5}},
+		{MP_QSTR_baudrate, MP_ARG_INT, {.u_int = 5000000}},
+	};
+	
+	mp_arg_val_t arg_vals[MP_ARRAY_SIZE(allowed_args)];
+	mp_arg_parse_all_kw_array(n_args, n_kw, args, MP_ARRAY_SIZE(allowed_args), allowed_args, arg_vals);
 
 	
-	self->spi = MP_OBJ_TO_PTR(args[0]);
-	self->cs = MP_OBJ_TO_PTR(args[1]);
-	self->rst = MP_OBJ_TO_PTR(args[2]);
-	/*
-	const mcu_pin_obj_t* cs = MP_OBJ_TO_PTR(args[1]);
-	const mcu_pin_obj_t* rst = MP_OBJ_TO_PTR(args[2]);
-	digitalinout_result_t result = common_hal_digitalio_digitalinout_construct(self->cs, cs);
-	mp_raise_ValueError(MP_ERROR_TEXT("initialized the thing"));
+	self->spi = validate_obj_is_spi_bus(arg_vals[ARG_spi].u_obj, MP_QSTR_spi);
+
+	
+	const mcu_pin_obj_t* cs = validate_obj_is_free_pin(arg_vals[ARG_cs].u_obj, MP_QSTR_cs);
+	const mcu_pin_obj_t* rst = validate_obj_is_free_pin(arg_vals[ARG_cs].u_obj, MP_QSTR_rst);
+
+	digitalinout_result_t result = common_hal_digitalio_digitalinout_construct(&self->cs, cs);
     if (result != DIGITALINOUT_OK) {
         mp_raise_ValueError_varg(MP_ERROR_TEXT("%q init failed"), MP_QSTR_cs);
     }
 
-	result = common_hal_digitalio_digitalinout_construct(self->rst, rst);
+	result = common_hal_digitalio_digitalinout_construct(&self->rst, rst);
     if (result != DIGITALINOUT_OK) {
         mp_raise_ValueError_varg(MP_ERROR_TEXT("%q init failed"), MP_QSTR_cs);
     }
-	*/
-	mp_raise_ValueError(MP_ERROR_TEXT("initialized first three things"));
-	self->frequency_mhz = mp_obj_get_int(args[3]);
-	self->preamble_length = mp_obj_get_int(args[4]);
-	self->coding_rate = mp_obj_get_int(args[5]);
-	self->high_power = mp_obj_get_int(args[6]);
-	self->baudrate = mp_obj_get_int(args[7]);
-	self->max_output = mp_obj_get_int(args[8]);
+
+	//set member variables with defaults not used in pycubed.py	
+	self->frequency_mhz = arg_vals[ARG_freq].u_int;
+	self->preamble_length = 8;
+	self->coding_rate = arg_vals[ARG_code_rate].u_int; 
+	self->high_power = true;
+	self->baudrate = arg_vals[ARG_code_rate].u_int;
+	self->max_output = false;
 
 	self->dio0 = false;
 
@@ -481,13 +490,12 @@ STATIC mp_obj_t lora_driver_make_new(const mp_obj_type_t *type, size_t n_args, s
 	initRegisterBits(&self->auto_agc, _RH_RF95_REG_26_MODEM_CONFIG3, 2, 1);
 
 	//self.reset()
-	common_hal_digitalio_digitalinout_switch_to_input(self->rst,PULL_UP );
+	common_hal_digitalio_digitalinout_switch_to_input(&self->rst,PULL_UP );
 	
 	lora_reset(self);
 	
 	
 	uint8_t version;
-	//common_hal_busio_spi_read(self->spi, &version, 1, _RH_RF95_REG_42_VERSION);
 	version = read_byte(self, _RH_RF95_REG_42_VERSION);
 	if (version != 18) {
 		mp_raise_ValueError(MP_ERROR_TEXT("failed to find rfm9x with expected version. Check wiring"));
@@ -515,11 +523,6 @@ STATIC mp_obj_t lora_driver_make_new(const mp_obj_type_t *type, size_t n_args, s
 	
 	if (self->frequency_mhz > 525) set_register(self, &self->low_frequency_mode, 0);
 
-	//uint8_t buffer[] = {_RH_RF95_REG_0E_FIFO_TX_BASE_ADDR, 0, _RH_RF95_REG_0F_FIFO_RX_BASE_ADDR, 0, _RH_RF95_REG_24_HOP_PERIOD, 0};
-
-	//common_hal_busio_spi_write(self->spi, buffer, 2);
-	//common_hal_busio_spi_write(self->spi, buffer + 2, 2);
-	//common_hal_busio_spi_write(self->spi, buffer + 4, 2);
 	write_byte(self, _RH_RF95_REG_0E_FIFO_TX_BASE_ADDR, 0);
 	write_byte(self, _RH_RF95_REG_0F_FIFO_RX_BASE_ADDR, 0);
 	write_byte(self, _RH_RF95_REG_24_HOP_PERIOD, 0);
@@ -530,8 +533,6 @@ STATIC mp_obj_t lora_driver_make_new(const mp_obj_type_t *type, size_t n_args, s
 	self->spreading_factor = 7;
 	self->enable_crc = false;
 
-	//uint8_t buffer2[] = {_RH_RF95_REG_26_MODEM_CONFIG3, 0};
-	//common_hal_busio_spi_write(self->spi, buffer2, 2);
 	write_byte(self, _RH_RF95_REG_26_MODEM_CONFIG3, 0);
 	self->tx_power = 13;
 	self->last_rssi = 0.0;
@@ -594,8 +595,6 @@ STATIC mp_obj_t lora_driver_tx_done(mp_obj_t self_in)
  * @date 12/20/2023
  */
 STATIC mp_obj_t lora_driver_send(size_t n_args, const mp_obj_t *args) {
-//STATIC mp_obj_t lora_driver_send(mp_obj_t self_in, mp_obj_t data, mp_obj_t keep_listening, mp_obj_t destination, mp_obj_t node, mp_obj_t identifier, mp_obj_t flags) {
-    //lora_driver_obj_t *self = m_new_obj(lora_driver_obj_t);
 
 	//parameters:
 	//self, data, keep_listening, destination,node,identifier,flags
@@ -633,8 +632,6 @@ STATIC mp_obj_t lora_driver_send(size_t n_args, const mp_obj_t *args) {
 
 
 
-	//uint8_t buf[] = {_RH_RF95_REG_0D_FIFO_ADDR_PTR, 0};
-	//common_hal_busio_spi_write(self->spi, buf, 2);
 	write_byte(self, _RH_RF95_REG_0D_FIFO_ADDR_PTR, 0);
 	if (destination) self->payload[0] = destination;
 	else self->payload[0] = self->destination;
@@ -653,15 +650,8 @@ STATIC mp_obj_t lora_driver_send(size_t n_args, const mp_obj_t *args) {
 	len+=4;
 
 	//_write_from
-	//buf[0] = (_RH_RF95_REG_00_FIFO | 0x80) & 0xFF;
-	//common_hal_busio_spi_write(self->spi, buf, 1);
-	
-	//common_hal_busio_spi_write(self->spi, self->payload, len);
 	write_bytes(self, (_RH_RF95_REG_00_FIFO | 0x80) & 0xFF, self->payload, len);
 
-	//buf[0] = _RH_RF95_REG_22_PAYLOAD_LENGTH;
-	//buf[1] = len;
-	//common_hal_busio_spi_write(self->spi, buf, 2);
 	write_byte(self, _RH_RF95_REG_22_PAYLOAD_LENGTH, len);
 
 	lora_transmit(self);
@@ -679,9 +669,6 @@ STATIC mp_obj_t lora_driver_send(size_t n_args, const mp_obj_t *args) {
 	else idle(self);
 
 
-	//buf[0] = _RH_RF95_REG_12_IRQ_FLAGS;
-	//buf[1] = 0xFF;
-	//common_hal_busio_spi_write(self->spi, buf, 2);
 	write_byte(self, _RH_RF95_REG_12_IRQ_FLAGS, 0xFF);
     return mp_obj_new_int(timed_out);
 }
@@ -708,7 +695,6 @@ STATIC mp_obj_t lora_driver_receive(size_t n_args, const mp_obj_t *args) {
 	bool with_header = mp_obj_get_int(args[2]);
 	bool with_ack = mp_obj_get_int(args[3]);
 	uint64_t timeout = mp_obj_get_int(args[4]);
-	//bool debug = mp_obj_get_int(args[5]);
 
 	bool timed_out = false;
 	
@@ -721,29 +707,20 @@ STATIC mp_obj_t lora_driver_receive(size_t n_args, const mp_obj_t *args) {
 	self->last_rssi = lora_rssi(self, false);
 	idle(self);
 	
-	//uint8_t buf[2];
 	uint8_t offset;
 	uint8_t fifo_length;
 	if (!timed_out) {
 		if (self->enable_crc && lora_crc_error(self)) self->crc_error_count +=1;
 		
 		else {
-			//common_hal_busio_spi_read(self->spi, &fifo_length, 1,_RH_RF95_REG_13_RX_NB_BYTES );
 			fifo_length = read_byte(self, _RH_RF95_REG_13_RX_NB_BYTES);
 			if (fifo_length >0) {
 				uint8_t current_addr;
-				//common_hal_busio_spi_read(self->spi, &current_addr, 1, _RH_RF95_REG_10_FIFO_RX_CURRENT_ADDR);
 				current_addr = read_byte(self, _RH_RF95_REG_10_FIFO_RX_CURRENT_ADDR);
-				//buf[0] = _RH_RF95_REG_0D_FIFO_ADDR_PTR; 
-				//buf[1] = current_addr;
-				//common_hal_busio_spi_write(self->spi, buf, 2);
 				write_byte(self, _RH_RF95_REG_0D_FIFO_ADDR_PTR, current_addr);
 				
-				//common_hal_busio_spi_read(self->spi, self->packet, fifo_length, _RH_RF95_REG_00_FIFO);
 				read_bytes(self, _RH_RF95_REG_00_FIFO, self->packet, fifo_length);
 			}
-			//buf[0] = _RH_RF95_REG_12_IRQ_FLAGS;
-			//buf[1] = 0xFF;
 			
 			if (fifo_length < 5) memset(self->packet, 0, 256); //idunno
 
@@ -769,13 +746,10 @@ STATIC mp_obj_t lora_driver_receive(size_t n_args, const mp_obj_t *args) {
 
 	if (keep_listening) lora_listen(self);
 	else idle(self);
-	//buf[0] = _RH_RF95_REG_12_IRQ_FLAGS;
-	//buf[1] = 0xFF;
-	//common_hal_busio_spi_write(self->spi, buf, 2);
+	
 	write_byte(self, _RH_RF95_REG_12_IRQ_FLAGS, 0xFF);
 
 	mp_obj_array_t* bytearray = array_new(BYTEARRAY_TYPECODE, fifo_length - offset);
-	//bytearray.items = self->packet;
 	memcpy(bytearray->items, self->packet + offset, fifo_length - offset);
 	return bytearray;	
 
@@ -833,7 +807,6 @@ const mp_obj_type_t lora_driver_type = {
     { &mp_type_type },
     .name = MP_QSTR_lora_driver,
     .make_new = lora_driver_make_new,
-    //.attr = adcsSoh_attr,
     .locals_dict = (mp_obj_dict_t*)&lora_locals_dict,
 	.print = lora_driver_print
 };
