@@ -100,12 +100,14 @@ STATIC mp_obj_t adcsSoh_quat(mp_obj_t self_in) {
 	return MP_OBJ_FROM_PTR(self->quat);
 }
 //define object with one parameter
+/*
 MP_DEFINE_CONST_FUN_OBJ_1(adcsSoh_state_obj, adcsSoh_state);
 MP_DEFINE_CONST_FUN_OBJ_1(adcsSoh_moment_obj, adcsSoh_moment);
 MP_DEFINE_CONST_FUN_OBJ_1(adcsSoh_angularVelocity_obj, adcsSoh_angularVelocity);
 MP_DEFINE_CONST_FUN_OBJ_1(adcsSoh_quat_obj, adcsSoh_quat);
+*/
 //map qsttr for attribute to attribute object
-STATIC const mp_rom_map_elem_t adcsSoh_locals_dict_table[] = {
+/*STATIC const mp_rom_map_elem_t adcsSoh_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_state), MP_ROM_PTR(&adcsSoh_state_obj) },
     { MP_ROM_QSTR(MP_QSTR_moment), MP_ROM_PTR(&adcsSoh_moment_obj) },
     { MP_ROM_QSTR(MP_QSTR_angularVelocity), MP_ROM_PTR(&adcsSoh_angularVelocity_obj) },
@@ -115,31 +117,37 @@ STATIC const mp_rom_map_elem_t adcsSoh_locals_dict_table[] = {
 
 
 STATIC MP_DEFINE_CONST_DICT(adcsSoh_locals_dict, adcsSoh_locals_dict_table);
-
+*/
 //called by class_instance.attribute
 //checks if attribute is a member of the internal data struct
 //destination[0] is the output, must be mp_obj type
 STATIC void adcsSoh_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination) {
-    if(attribute == MP_QSTR_state) {
+ 
+	switch (attribute) {	
+		case MP_QSTR_state:
         destination[0] = adcsSoh_state(self_in);
-    }
-	if (attribute == MP_QSTR_adcsstatus) {
+    	break;
+	
+		case MP_QSTR_adcsstatus:
 		destination[0] = adcsSoh_adcsstatus(self_in);
-	}
-	if (attribute == MP_QSTR_moment) {
+		break;
+		
+		case MP_QSTR_moment:
 		destination[0] = adcsSoh_moment(self_in);
-	}
-	if (attribute == MP_QSTR_angularVelocity) {
+		break;
+
+		case MP_QSTR_angularVelocity:
 		destination[0] = adcsSoh_angularVelocity(self_in);
-	}
-	if (attribute == MP_QSTR_quat) {
+		break;
+		case MP_QSTR_quat:
 		destination[0] = adcsSoh_quat(self_in);
-	}
-	if (attribute == MP_QSTR_adcstime) {
+		break;
+		case MP_QSTR_adcstime:
 		destination[0] = adcsSoh_adcstime(self_in);
-	}
-	if (attribute == MP_QSTR_timestamp) {
+		break;
+		case MP_QSTR_timestamp:
 		destination[0] = adcsSoh_timestamp(self_in);
+		break;
 	}
 
 }
@@ -148,11 +156,9 @@ STATIC void adcsSoh_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination
 STATIC void adcsSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     (void)kind;
     adcsSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_print_str(print, "adcsSoh(");
+//    mp_print_str(print, "adcsSoh(");
 	mp_print_str(print, " state: ");
     mp_obj_print_helper(print, mp_obj_new_int(self->state), PRINT_REPR);
-	
-	
 	mp_print_str(print, ", status: ");
     mp_obj_print_helper(print, mp_obj_new_int(self->adcsstatus), PRINT_REPR);
 	
@@ -171,7 +177,7 @@ STATIC void adcsSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_ki
 	
 	mp_print_str(print, ", timestamp: ");
     mp_obj_print_helper(print, mp_obj_new_float(self->timestamp), PRINT_REPR);
-    mp_print_str(print, ")");
+//    mp_print_str(print, ")");
 }
 
 
@@ -182,7 +188,7 @@ const mp_obj_type_t adcsSoh_type = {
     .name = MP_QSTR_adcsSoh,
     .make_new = adcsSoh_make_new,
     .attr = adcsSoh_attr,
-    .locals_dict = (mp_obj_dict_t*)&adcsSoh_locals_dict,
+    //.locals_dict = (mp_obj_dict_t*)&adcsSoh_locals_dict,
 	.print = adcsSoh_print
 };
 
@@ -250,6 +256,7 @@ STATIC mp_obj_t gpsSoh_speed_knots(mp_obj_t self_in) {
     return mp_obj_new_float(self->speed_knots);
 }
 //define object with one parameter
+/*
 MP_DEFINE_CONST_FUN_OBJ_1(gpsSoh_gpstime_obj, gpsSoh_gpstime);
 MP_DEFINE_CONST_FUN_OBJ_1(gpsSoh_alt_obj, gpsSoh_alt);
 MP_DEFINE_CONST_FUN_OBJ_1(gpsSoh_lat_obj, gpsSoh_lat);
@@ -257,7 +264,9 @@ MP_DEFINE_CONST_FUN_OBJ_1(gpsSoh_lon_obj, gpsSoh_lon);
 MP_DEFINE_CONST_FUN_OBJ_1(gpsSoh_quality_obj, gpsSoh_quality);
 MP_DEFINE_CONST_FUN_OBJ_1(gpsSoh_timestamp_obj, gpsSoh_timestamp);
 MP_DEFINE_CONST_FUN_OBJ_1(gpsSoh_speed_knots_obj, gpsSoh_speed_knots);
+*/
 //map qsttr for attribute to attribute object
+/*
 STATIC const mp_rom_map_elem_t gpsSoh_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_gpstime), MP_ROM_PTR(&gpsSoh_gpstime_obj) },
 //    { MP_ROM_QSTR(MP_QSTR_alt), MP_ROM_PTR(&gpsSoh_alt_obj) },
@@ -269,39 +278,41 @@ STATIC const mp_rom_map_elem_t gpsSoh_locals_dict_table[] = {
 };
 
 STATIC MP_DEFINE_CONST_DICT(gpsSoh_locals_dict, gpsSoh_locals_dict_table);
-
+*/
 //called by class_instance.attribute
 //checks if attribute is a member of the internal data struct
 //destination[0] is the output, must be mp_obj type
 STATIC void gpsSoh_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination) {
-    if(attribute == MP_QSTR_gpstime) {
+    switch (attribute) {
+		case MP_QSTR_gpstime:
         destination[0] = gpsSoh_gpstime(self_in);
-    }
-    if(attribute == MP_QSTR_alt) {
+    	break;
+		case MP_QSTR_alt:
         destination[0] = gpsSoh_alt(self_in);
-    }
-    if(attribute == MP_QSTR_lat) {
+    	break;
+		case MP_QSTR_lat:
         destination[0] = gpsSoh_lat(self_in);
-    }
-    if(attribute == MP_QSTR_lon) {
+    	break;
+		case MP_QSTR_lon:
         destination[0] = gpsSoh_lon(self_in);
-    }
-    if(attribute == MP_QSTR_quality) {
+    	break;
+		case MP_QSTR_quality:
         destination[0] = gpsSoh_quality(self_in);
-    }
-    if(attribute == MP_QSTR_timestamp) {
+    	break;
+		case MP_QSTR_timestamp:
         destination[0] = gpsSoh_timestamp(self_in);
-    }
-    if(attribute == MP_QSTR_speed_knots) {
+    	break;
+    	case MP_QSTR_speed_knots:
         destination[0] = gpsSoh_speed_knots(self_in);
-    }
+    	break;
+	}
 }
 
 
 STATIC void gpsSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     (void)kind;
     gpsSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_print_str(print, "gpsSoh(");
+    //mp_print_str(print, "gpsSoh(");
 	mp_print_str(print, " lat: ");
     mp_obj_print_helper(print, mp_obj_new_float(self->lat), PRINT_REPR);
 	
@@ -319,9 +330,12 @@ STATIC void gpsSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kin
 	mp_print_str(print, ", speed_knots: ");
     mp_obj_print_helper(print, mp_obj_new_float(self->speed_knots), PRINT_REPR);
 	
+	mp_print_str(print, ", gpstime: ");
+    mp_obj_print_helper(print, mp_obj_new_float(self->gpstime), PRINT_REPR);
+	
 	mp_print_str(print, ", timestamp: ");
     mp_obj_print_helper(print, mp_obj_new_float(self->timestamp), PRINT_REPR);
-    mp_print_str(print, ")");
+   // mp_print_str(print, ")");
 }
 
 
@@ -331,7 +345,7 @@ const mp_obj_type_t gpsSoh_type = {
     .name = MP_QSTR_gpsSoh,
     .make_new = gpsSoh_make_new,
     .attr = gpsSoh_attr,
-    .locals_dict = (mp_obj_dict_t*)&gpsSoh_locals_dict,
+    //.locals_dict = (mp_obj_dict_t*)&gpsSoh_locals_dict,
 	.print = gpsSoh_print,
 };
 
@@ -388,6 +402,7 @@ STATIC mp_obj_t powerSoh_timestamp(mp_obj_t self_in) {
     return mp_obj_new_float(self->timestamp);
 }
 //define object with one parameter
+/*
 MP_DEFINE_CONST_FUN_OBJ_1(powerSoh_systemV_obj, powerSoh_systemV);
 MP_DEFINE_CONST_FUN_OBJ_1(powerSoh_battV_obj, powerSoh_battV);
 MP_DEFINE_CONST_FUN_OBJ_1(powerSoh_busI_obj, powerSoh_busI);
@@ -401,30 +416,32 @@ STATIC const mp_rom_map_elem_t powerSoh_locals_dict_table[] = {
 };
 
 STATIC MP_DEFINE_CONST_DICT(powerSoh_locals_dict, powerSoh_locals_dict_table);
-
+*/
 //called by class_instance.attribute
 //checks if attribute is a member of the internal data struct
 //destination[0] is the output, must be mp_obj type
 STATIC void powerSoh_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination) {
-    if(attribute == MP_QSTR_systemV) {
+    switch (attribute) {
+		case MP_QSTR_systemV:
         destination[0] = powerSoh_systemV(self_in);
-    }
-    if(attribute == MP_QSTR_battV) {
+    	break;
+		case MP_QSTR_battV:
         destination[0] = powerSoh_battV(self_in);
-    }
-    if(attribute == MP_QSTR_busI) {
+    	break;
+    	case MP_QSTR_busI:
         destination[0] = powerSoh_busI(self_in);
-    }
-    if(attribute == MP_QSTR_timestamp) {
+    	break;
+		case MP_QSTR_timestamp:
         destination[0] = powerSoh_timestamp(self_in);
-    }
+    	break;
+	}
 }
 
 
 STATIC void powerSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     (void)kind;
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_print_str(print, "powerSoh(");
+    //mp_print_str(print, "powerSoh(");
 	mp_print_str(print, " systemV: ");
     mp_obj_print_helper(print, mp_obj_new_float(self->systemV), PRINT_REPR);
 	
@@ -438,7 +455,7 @@ STATIC void powerSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_k
 	
 	mp_print_str(print, ", timestamp: ");
     mp_obj_print_helper(print, mp_obj_new_float(self->timestamp), PRINT_REPR);
-    mp_print_str(print, ")");
+    //mp_print_str(print, ")");
 }
 
 //register python object visible to interpreter
@@ -447,7 +464,7 @@ const mp_obj_type_t powerSoh_type = {
     .name = MP_QSTR_powerSoh,
     .make_new = powerSoh_make_new,
     .attr = powerSoh_attr,
-    .locals_dict = (mp_obj_dict_t*)&powerSoh_locals_dict,
+    //.locals_dict = (mp_obj_dict_t*)&powerSoh_locals_dict,
 	.print = powerSoh_print,
 };
 
@@ -533,7 +550,7 @@ STATIC mp_obj_t tempSoh_timestamp(mp_obj_t self_in) {
     return mp_obj_new_float(self->timestamp);
 }
 //define object with one parameter
-MP_DEFINE_CONST_FUN_OBJ_1(tempSoh_battery_obj, tempSoh_battery);
+/*MP_DEFINE_CONST_FUN_OBJ_1(tempSoh_battery_obj, tempSoh_battery);
 MP_DEFINE_CONST_FUN_OBJ_1(tempSoh_ntc1_obj, tempSoh_ntc1);
 MP_DEFINE_CONST_FUN_OBJ_1(tempSoh_ntc2_obj, tempSoh_ntc2);
 MP_DEFINE_CONST_FUN_OBJ_1(tempSoh_ntc3_obj, tempSoh_ntc3);
@@ -558,46 +575,87 @@ STATIC const mp_rom_map_elem_t tempSoh_locals_dict_table[] = {
 };
 
 STATIC MP_DEFINE_CONST_DICT(tempSoh_locals_dict, tempSoh_locals_dict_table);
-
+*/
 //called by class_instance.attribute
 //checks if attribute is a member of the internal data struct
 //destination[0] is the output, must be mp_obj type
 STATIC void tempSoh_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination) {
-    if(attribute == MP_QSTR_battery) {
+    switch (attribute) {
+		case MP_QSTR_battery:
         destination[0] = tempSoh_battery(self_in);
-    }
-    if(attribute == MP_QSTR_ntc1) {
+    	break;
+		case MP_QSTR_ntc1:
         destination[0] = tempSoh_ntc1(self_in);
-    }
-    if(attribute == MP_QSTR_ntc2) {
+    	break;
+    	case MP_QSTR_ntc2:
         destination[0] = tempSoh_ntc2(self_in);
-    }
-    if(attribute == MP_QSTR_ntc3) {
+    	break;
+		case MP_QSTR_ntc3:
         destination[0] = tempSoh_ntc3(self_in);
-    }
-    if(attribute == MP_QSTR_ntc4) {
+    	break;
+    	case MP_QSTR_ntc4:
         destination[0] = tempSoh_ntc4(self_in);
-    }
-    if(attribute == MP_QSTR_a) {
+    	break;
+    	case MP_QSTR_a:
         destination[0] = tempSoh_a(self_in);
-    }
-    if(attribute == MP_QSTR_b) {
+    	break;
+		case MP_QSTR_b:
         destination[0] = tempSoh_b(self_in);
-    }
-    if(attribute == MP_QSTR_c) {
+    	break;
+		case MP_QSTR_c:
         destination[0] = tempSoh_c(self_in);
-    }
-    if(attribute == MP_QSTR_d) {
+    	break;
+		case MP_QSTR_d:
         destination[0] = tempSoh_d(self_in);
-    }
+    	break;
+		case MP_QSTR_timestamp:
+		destination[0] = tempSoh_timestamp(self_in);
+		break;
+	}
 }
+
+STATIC void tempSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
+    (void)kind;
+    tempSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
+    //mp_print_str(print, "powerSoh(");
+	mp_print_str(print, " battery: ");
+    mp_obj_print_helper(print, mp_obj_new_float(self->battery), PRINT_REPR);
+	
+	
+	mp_print_str(print, ", ntc1: ");
+    mp_obj_print_helper(print, mp_obj_new_float(self->ntc1), PRINT_REPR);
+	
+	mp_print_str(print, ", ntc2: ");
+    mp_obj_print_helper(print, mp_obj_new_float(self->ntc2), PRINT_REPR);
+	mp_print_str(print, ", ntc3: ");
+    mp_obj_print_helper(print, mp_obj_new_float(self->ntc3), PRINT_REPR);
+	mp_print_str(print, ", ntc4: ");
+	mp_obj_print_helper(print, mp_obj_new_float(self->ntc4), PRINT_REPR);
+	
+	mp_print_str(print, ", a: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->a), PRINT_REPR);
+	mp_print_str(print, ", b: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->b), PRINT_REPR);
+	mp_print_str(print, ", c: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->c), PRINT_REPR);
+	mp_print_str(print, ", d: ");
+    mp_obj_print_helper(print,mp_obj_new_float(self->d), PRINT_REPR);
+	
+	
+	mp_print_str(print, ", timestamp: ");
+    mp_obj_print_helper(print, mp_obj_new_float(self->timestamp), PRINT_REPR);
+    //mp_print_str(print, ")");
+}
+
+
 //register python object visible to interpreter
 const mp_obj_type_t tempSoh_type = {
     { &mp_type_type },
     .name = MP_QSTR_tempSoh,
     .make_new = tempSoh_make_new,
     .attr = tempSoh_attr,
-    .locals_dict = (mp_obj_dict_t*)&tempSoh_locals_dict,
+    //.locals_dict = (mp_obj_dict_t*)&tempSoh_locals_dict,
+	.print = tempSoh_print
 };
 
 
@@ -618,7 +676,7 @@ typedef struct _comSoh_obj_t {
 	//iridium
 	mp_uint_t status;
 	mp_int_t signal_quality;
-	mp_float_t location;
+	ndarray_obj_t* location;
 	mp_float_t sys_time;
 	mp_float_t energy;
 		
@@ -639,7 +697,7 @@ STATIC mp_obj_t comSoh_make_new(const mp_obj_type_t *type, size_t n_args, size_t
     
 	self->status = mp_obj_get_int(args[5]);	
 	self->signal_quality = mp_obj_get_int(args[6]);	
-	self->location = mp_obj_get_float(args[7]);	
+	self->location = getNumpyArray(args[7]);//mp_obj_get_float(args[7]);	
 	self->sys_time = mp_obj_get_float(args[8]);	
 	
 	self->timestamp = mp_obj_get_float(args[9]);
@@ -647,6 +705,7 @@ STATIC mp_obj_t comSoh_make_new(const mp_obj_type_t *type, size_t n_args, size_t
 }
 //getter only visible to c interface, called by propertyclass_attr
 //if attr qstr == x's qster
+
 STATIC mp_obj_t comSoh_rssi(mp_obj_t self_in) {
     comSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_float(self->rssi);
@@ -677,7 +736,7 @@ STATIC mp_obj_t comSoh_signal_quality(mp_obj_t self_in) {
 }
 STATIC mp_obj_t comSoh_location(mp_obj_t self_in) {
     comSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    return mp_obj_new_float(self->location);
+    return MP_OBJ_FROM_PTR(self->location);
 }
 STATIC mp_obj_t comSoh_sys_time(mp_obj_t self_in) {
     comSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
@@ -693,6 +752,7 @@ STATIC mp_obj_t comSoh_timestamp(mp_obj_t self_in) {
 	comSoh_obj_t* self = MP_OBJ_TO_PTR(self_in);
 	return mp_obj_new_float(self->timestamp);
 }
+/*
 //define object with one parameter
 MP_DEFINE_CONST_FUN_OBJ_1(comSoh_rssi_obj, comSoh_rssi);
 MP_DEFINE_CONST_FUN_OBJ_1(comSoh_txcomplete_obj, comSoh_txcomplete);
@@ -723,45 +783,47 @@ STATIC const mp_rom_map_elem_t comSoh_locals_dict_table[] = {
 };
 
 STATIC MP_DEFINE_CONST_DICT(comSoh_locals_dict, comSoh_locals_dict_table);
-
+*/
 //called by class_instance.attribute
 //checks if attribute is a member of the internal data struct
 //destination[0] is the output, must be mp_obj type
 STATIC void comSoh_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination) {
-    if(attribute == MP_QSTR_rssi) {
+    switch (attribute) {
+		case MP_QSTR_rssi:
         destination[0] = comSoh_rssi(self_in);
-    }
-    if(attribute == MP_QSTR_txcomplete) {
+    	break;
+		case MP_QSTR_txcomplete:
         destination[0] = comSoh_txcomplete(self_in);
-    }
-    if(attribute == MP_QSTR_rxcomplete) {
+    	break;
+		case MP_QSTR_rxcomplete:
         destination[0] = comSoh_rxcomplete(self_in);
-    }
-    if(attribute == MP_QSTR_crc) {
+    	break;
+    	case MP_QSTR_crc:
         destination[0] = comSoh_crc(self_in);
-    }
-    if(attribute == MP_QSTR_flags) {
+    	break;
+		case MP_QSTR_flags:
         destination[0] = comSoh_flags(self_in);
-    }
+    	break;
 	
-    if(attribute == MP_QSTR_status) {
+		case MP_QSTR_status:
         destination[0] = comSoh_status(self_in);
-    }
-    if(attribute == MP_QSTR_signal_quality) {
+    	break;
+		case MP_QSTR_signal_quality:
         destination[0] = comSoh_signal_quality(self_in);
-    }
-    if(attribute == MP_QSTR_location) {
+    	break;
+		case MP_QSTR_location:
         destination[0] = comSoh_location(self_in);
-    }
-    if(attribute == MP_QSTR_sys_time) {
+    	break;
+		case MP_QSTR_sys_time:
         destination[0] = comSoh_sys_time(self_in);
-    }
-    if(attribute == MP_QSTR_energy) {
+    	break;
+		case MP_QSTR_energy:
         destination[0] = comSoh_energy(self_in);
-    }
+    	break;
 	
-	if (attribute == MP_QSTR_timestamp) {
+		case MP_QSTR_timestamp:
 		destination[0] = comSoh_timestamp(self_in);
+		break;
 	}
 
 }
@@ -772,7 +834,7 @@ STATIC void comSoh_attr(mp_obj_t self_in, qstr attribute, mp_obj_t *destination)
 STATIC void comSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kind_t kind) {
     (void)kind;
     comSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
-    mp_print_str(print, "comSoh(");
+    //mp_print_str(print, "comSoh(");
 	mp_print_str(print, " rssi: ");
     mp_obj_print_helper(print, mp_obj_new_float(self->rssi), PRINT_REPR);
 	
@@ -790,11 +852,24 @@ STATIC void comSoh_print(const mp_print_t *print, mp_obj_t self_in, mp_print_kin
 	
 	mp_print_str(print, ", flags: ");
     mp_obj_print_helper(print, mp_obj_new_int(self->rxcomplete), PRINT_REPR);
+
+
+	mp_print_str(print, ", rb_status: ");
+    mp_obj_print_helper(print, mp_obj_new_int(self->status), PRINT_REPR);
 	
+	mp_print_str(print, ", rb_signal_quality: ");
+    mp_obj_print_helper(print, mp_obj_new_int(self->signal_quality), PRINT_REPR);
+	
+
+	mp_print_str(print, ", rb_location: ");
+    mp_obj_print_helper(print, MP_OBJ_FROM_PTR(self->location), PRINT_REPR);
+	
+	mp_print_str(print, ", sys_time: ");
+    mp_obj_print_helper(print, mp_obj_new_float(self->sys_time), PRINT_REPR);
 	
 	mp_print_str(print, ", timestamp: ");
     mp_obj_print_helper(print, mp_obj_new_float(self->timestamp), PRINT_REPR);
-    mp_print_str(print, ")");
+    //mp_print_str(print, ")");
 }
 
 //register python object visible to interpreter
@@ -803,7 +878,7 @@ const mp_obj_type_t comSoh_type = {
     .name = MP_QSTR_comSoh,
     .make_new = comSoh_make_new,
     .attr = comSoh_attr,
-    .locals_dict = (mp_obj_dict_t*)&comSoh_locals_dict,
+   // .locals_dict = (mp_obj_dict_t*)&comSoh_locals_dict,
 	.print = comSoh_print,
 };
 
