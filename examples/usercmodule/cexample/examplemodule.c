@@ -439,6 +439,84 @@ STATIC mp_obj_t gpsSoh_speed_knots(mp_obj_t self_in) {
     gpsSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_float(self->speed_knots);
 }
+
+
+STATIC mp_obj_t gpsSoh_get_bytes(mp_obj_t self_in)
+{
+	gpsSoh_obj_t* self = MP_OBJ_TO_PTR(self_in);
+	
+	mp_obj_array_t* retval = array_new(BYTEARRAY_TYPECODE, sizeof(mp_int_t) + 6*sizeof(float));
+	uint8_t* dest = retval->items;
+	uint8_t* src = (uint8_t*) self;
+	src+= sizeof(mp_obj_base_t);
+	memcpy(dest, src, sizeof(gpsSoh_obj_t) - sizeof(mp_obj_base_t));
+	
+	//memcpy(retval->items, self, sizeof(adcsSoh_obj_t));
+	
+	/*memcpy(dest,&self->gpstime, sizeof(mp_float_t));
+	dest += sizeof(float);
+	memcpy(dest,&self->alt, sizeof(mp_float_t));
+	dest += sizeof(float);
+	memcpy(dest,&self->lat, sizeof(mp_float_t));
+	dest += sizeof(float);
+	memcpy(dest,&self->lon, sizeof(mp_float_t));
+	dest += sizeof(float);
+	memcpy(dest,&self->quality, sizeof(mp_int_t));
+	dest += sizeof(mp_int_t);
+	memcpy(dest,&self->timestamp, sizeof(mp_float_t));
+	dest += sizeof(float);
+	memcpy(dest,&self->speed_knots, sizeof(mp_float_t));
+	*/
+
+	return MP_OBJ_FROM_PTR(retval);
+}
+
+STATIC mp_obj_t gpsSoh_from_bytes(mp_obj_t self_in, mp_obj_t new_data)
+{
+	
+    gpsSoh_obj_t *self = m_new_obj(gpsSoh_obj_t);
+	mp_buffer_info_t bufinfo;		
+    if (((MICROPY_PY_BUILTINS_BYTEARRAY)
+         || (MICROPY_PY_ARRAY
+             && (mp_obj_is_type(new_data, &mp_type_bytes)
+                 || (MICROPY_PY_BUILTINS_BYTEARRAY && mp_obj_is_type(new_data, &mp_type_bytearray)))))
+        && mp_get_buffer(new_data, &bufinfo, MP_BUFFER_READ)) {
+        // construct array from raw bytes
+        size_t sz = mp_binary_get_size('@', BYTEARRAY_TYPECODE, NULL);
+        if (bufinfo.len % sz) {
+            mp_raise_ValueError(MP_ERROR_TEXT("bytes length not a multiple of item size"));
+        }
+        //size_t len = bufinfo.len / sz;
+	}
+    self->base.type = &gpsSoh_type;
+
+	memcpy(&self->gpstime, bufinfo.buf, sizeof(float));
+	bufinfo.buf+=sizeof(float);
+	memcpy(&self->alt, bufinfo.buf, sizeof(float));
+	bufinfo.buf+=sizeof(float);
+	memcpy(&self->lat, bufinfo.buf, sizeof(float));
+	bufinfo.buf+=sizeof(float);
+	memcpy(&self->lon, bufinfo.buf, sizeof(float));
+	bufinfo.buf+=sizeof(float);
+	memcpy(&self->quality, bufinfo.buf, sizeof(mp_int_t));
+	bufinfo.buf+=sizeof(mp_int_t);
+	memcpy(&self->timestamp, bufinfo.buf, sizeof(float));
+	bufinfo.buf+=sizeof(float);
+	memcpy(&self->speed_knots, bufinfo.buf, sizeof(float));
+
+	return MP_OBJ_FROM_PTR(self);	
+
+}
+
+
+MP_DEFINE_CONST_FUN_OBJ_1(gpsSoh_get_bytes_obj, gpsSoh_get_bytes);
+MP_DEFINE_CONST_FUN_OBJ_2(gpsSoh_from_bytes_obj, gpsSoh_from_bytes);
+
+STATIC const mp_rom_map_elem_t gpsSoh_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_get_bytes), MP_ROM_PTR(&gpsSoh_get_bytes_obj) },
+    { MP_ROM_QSTR(MP_QSTR_from_bytes), MP_ROM_PTR(&gpsSoh_from_bytes_obj) }
+};	
+STATIC MP_DEFINE_CONST_DICT(gpsSoh_locals_dict, gpsSoh_locals_dict_table);
 //define object with one parameter
 /*
 MP_DEFINE_CONST_FUN_OBJ_1(gpsSoh_gpstime_obj, gpsSoh_gpstime);
@@ -529,7 +607,7 @@ const mp_obj_type_t gpsSoh_type = {
     .name = MP_QSTR_gpsSoh,
     .make_new = gpsSoh_make_new,
     .attr = gpsSoh_attr,
-    //.locals_dict = (mp_obj_dict_t*)&gpsSoh_locals_dict,
+    .locals_dict = (mp_obj_dict_t*)&gpsSoh_locals_dict,
 	.print = gpsSoh_print,
 };
 
@@ -593,10 +671,10 @@ STATIC mp_obj_t powerSoh_make_new(const mp_obj_type_t *type, size_t n_args, size
 		{MP_QSTR_bus_current, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_v3v3_voltage, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_v3v3_current, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_payload_current, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_payload_voltage, MP_ARG_OBJ, {.u_obj = mp_const_none}},
-		{MP_QSTR_rf_current, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_payload_current, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_rf_voltage, MP_ARG_OBJ, {.u_obj = mp_const_none}},
+		{MP_QSTR_rf_current, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_solar1_voltage, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 		{MP_QSTR_solar2_voltage, MP_ARG_OBJ, {.u_obj = mp_const_none}},
 	};
@@ -719,6 +797,59 @@ STATIC mp_obj_t powerSoh_solar2_voltage(mp_obj_t self_in) {
     powerSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_float(self->solar2_voltage);
 }
+
+
+
+STATIC mp_obj_t powerSoh_get_bytes(mp_obj_t self_in)
+{
+	powerSoh_obj_t* self = MP_OBJ_TO_PTR(self_in);
+	
+	mp_obj_array_t* retval = array_new(BYTEARRAY_TYPECODE, 20*sizeof(float));
+	//uint8_t* dest = retval->items;
+	//memcpy(retval->items, self, sizeof(adcsSoh_obj_t));
+	uint8_t* src = (uint8_t*)self;
+	uint8_t* dest = retval->items;
+	src+=sizeof(mp_obj_base_t);
+	memcpy(dest, src, sizeof(powerSoh_obj_t) - sizeof(mp_obj_base_t));
+
+	return MP_OBJ_FROM_PTR(retval);
+}
+
+STATIC mp_obj_t powerSoh_from_bytes(mp_obj_t self_in, mp_obj_t new_data)
+{
+	
+    powerSoh_obj_t *self = m_new_obj(powerSoh_obj_t);
+	mp_buffer_info_t bufinfo;		
+    if (((MICROPY_PY_BUILTINS_BYTEARRAY)
+         || (MICROPY_PY_ARRAY
+             && (mp_obj_is_type(new_data, &mp_type_bytes)
+                 || (MICROPY_PY_BUILTINS_BYTEARRAY && mp_obj_is_type(new_data, &mp_type_bytearray)))))
+        && mp_get_buffer(new_data, &bufinfo, MP_BUFFER_READ)) {
+        // construct array from raw bytes
+        size_t sz = mp_binary_get_size('@', BYTEARRAY_TYPECODE, NULL);
+        if (bufinfo.len % sz) {
+            mp_raise_ValueError(MP_ERROR_TEXT("bytes length not a multiple of item size"));
+        }
+        //size_t len = bufinfo.len / sz;
+	}
+    self->base.type = &powerSoh_type;
+
+	uint8_t* dest = (uint8_t*)self;
+	dest+= sizeof(mp_obj_base_t);
+	memcpy(dest, bufinfo.buf, sizeof(powerSoh_obj_t)-sizeof(mp_obj_base_t));
+	
+	return MP_OBJ_FROM_PTR(self);	
+
+}
+
+MP_DEFINE_CONST_FUN_OBJ_1(powerSoh_get_bytes_obj, powerSoh_get_bytes);
+MP_DEFINE_CONST_FUN_OBJ_2(powerSoh_from_bytes_obj, powerSoh_from_bytes);
+
+STATIC const mp_rom_map_elem_t powerSoh_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_get_bytes), MP_ROM_PTR(&powerSoh_get_bytes_obj) },
+    { MP_ROM_QSTR(MP_QSTR_from_bytes), MP_ROM_PTR(&powerSoh_from_bytes_obj) }
+};
+STATIC MP_DEFINE_CONST_DICT(powerSoh_locals_dict, powerSoh_locals_dict_table);
 //define object with one parameter
 /*
 MP_DEFINE_CONST_FUN_OBJ_1(powerSoh_systemV_obj, powerSoh_systemV);
@@ -865,7 +996,7 @@ const mp_obj_type_t powerSoh_type = {
     .name = MP_QSTR_powerSoh,
     .make_new = powerSoh_make_new,
     .attr = powerSoh_attr,
-    //.locals_dict = (mp_obj_dict_t*)&powerSoh_locals_dict,
+    .locals_dict = (mp_obj_dict_t*)&powerSoh_locals_dict,
 	.print = powerSoh_print,
 };
 
@@ -1008,6 +1139,59 @@ STATIC mp_obj_t tempSoh_timestamp(mp_obj_t self_in) {
     tempSoh_obj_t *self = MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_float(self->timestamp);
 }
+
+
+STATIC mp_obj_t tempSoh_get_bytes(mp_obj_t self_in)
+{
+	tempSoh_obj_t* self = MP_OBJ_TO_PTR(self_in);
+	
+	mp_obj_array_t* retval = array_new(BYTEARRAY_TYPECODE, 15*sizeof(float));
+	//uint8_t* dest = retval->items;
+	//memcpy(retval->items, self, sizeof(adcsSoh_obj_t));
+	uint8_t* src = (uint8_t*)self;
+	src+=sizeof(mp_obj_base_t);
+	memcpy(retval->items, src, sizeof(tempSoh_obj_t) - sizeof(mp_obj_base_t));
+
+	return MP_OBJ_FROM_PTR(retval);
+}
+
+STATIC mp_obj_t tempSoh_from_bytes(mp_obj_t self_in, mp_obj_t new_data)
+{
+	
+    tempSoh_obj_t *self = m_new_obj(tempSoh_obj_t);
+	mp_buffer_info_t bufinfo;		
+    if (((MICROPY_PY_BUILTINS_BYTEARRAY)
+         || (MICROPY_PY_ARRAY
+             && (mp_obj_is_type(new_data, &mp_type_bytes)
+                 || (MICROPY_PY_BUILTINS_BYTEARRAY && mp_obj_is_type(new_data, &mp_type_bytearray)))))
+        && mp_get_buffer(new_data, &bufinfo, MP_BUFFER_READ)) {
+        // construct array from raw bytes
+        size_t sz = mp_binary_get_size('@', BYTEARRAY_TYPECODE, NULL);
+        if (bufinfo.len % sz) {
+            mp_raise_ValueError(MP_ERROR_TEXT("bytes length not a multiple of item size"));
+        }
+        //size_t len = bufinfo.len / sz;
+	}
+    self->base.type = &tempSoh_type;
+
+	uint8_t* dest = (uint8_t*)self;
+	dest+= sizeof(mp_obj_base_t);
+	memcpy(dest, bufinfo.buf, sizeof(tempSoh_obj_t)-sizeof(mp_obj_base_t));
+	
+	return MP_OBJ_FROM_PTR(self);	
+
+}
+
+
+MP_DEFINE_CONST_FUN_OBJ_1(tempSoh_get_bytes_obj, tempSoh_get_bytes);
+MP_DEFINE_CONST_FUN_OBJ_2(tempSoh_from_bytes_obj, tempSoh_from_bytes);
+
+STATIC const mp_rom_map_elem_t tempSoh_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_get_bytes), MP_ROM_PTR(&tempSoh_get_bytes_obj) },
+    { MP_ROM_QSTR(MP_QSTR_from_bytes), MP_ROM_PTR(&tempSoh_from_bytes_obj) }
+};
+
+STATIC MP_DEFINE_CONST_DICT(tempSoh_locals_dict, tempSoh_locals_dict_table);
 //define object with one parameter
 /*MP_DEFINE_CONST_FUN_OBJ_1(tempSoh_battery_obj, tempSoh_battery);
 MP_DEFINE_CONST_FUN_OBJ_1(tempSoh_ntc1_obj, tempSoh_ntc1);
@@ -1139,7 +1323,7 @@ const mp_obj_type_t tempSoh_type = {
     .name = MP_QSTR_tempSoh,
     .make_new = tempSoh_make_new,
     .attr = tempSoh_attr,
-    //.locals_dict = (mp_obj_dict_t*)&tempSoh_locals_dict,
+    .locals_dict = (mp_obj_dict_t*)&tempSoh_locals_dict,
 	.print = tempSoh_print
 };
 
@@ -1262,6 +1446,80 @@ STATIC mp_obj_t comSoh_timestamp(mp_obj_t self_in) {
 	comSoh_obj_t* self = MP_OBJ_TO_PTR(self_in);
 	return mp_obj_new_float(self->timestamp);
 }
+
+
+
+STATIC mp_obj_t comSoh_get_bytes(mp_obj_t self_in)
+{
+	comSoh_obj_t* self = MP_OBJ_TO_PTR(self_in);
+	
+	mp_obj_array_t* retval = array_new(BYTEARRAY_TYPECODE,3*sizeof(mp_uint_t) + 3* sizeof(mp_int_t) + 6*sizeof(float));
+	uint8_t* dest = retval->items;
+	//memcpy(retval->items, self, sizeof(adcsSoh_obj_t));
+	uint8_t* src = (uint8_t*)self;
+	src+=sizeof(mp_obj_base_t);
+	size_t n =  sizeof(mp_float_t) + 3*sizeof(mp_int_t) + 3*sizeof(mp_uint_t);
+	//uint8_t* dest = retval->items;
+	memcpy(dest, src, n);
+	dest+=n;
+	//self+=n;
+	copy_np_array(self->location, dest);
+	dest+= 3 * sizeof(mp_float_t);
+	memcpy(dest, &self->sys_time, sizeof(mp_float_t));
+	dest+= sizeof(mp_float_t);
+	memcpy(dest, &self->timestamp, sizeof(mp_float_t));
+
+
+	return MP_OBJ_FROM_PTR(retval);
+}
+
+STATIC mp_obj_t comSoh_from_bytes(mp_obj_t self_in, mp_obj_t new_data)
+{
+	
+    comSoh_obj_t *self = m_new_obj(comSoh_obj_t);
+	mp_buffer_info_t bufinfo;		
+    if (((MICROPY_PY_BUILTINS_BYTEARRAY)
+         || (MICROPY_PY_ARRAY
+             && (mp_obj_is_type(new_data, &mp_type_bytes)
+                 || (MICROPY_PY_BUILTINS_BYTEARRAY && mp_obj_is_type(new_data, &mp_type_bytearray)))))
+        && mp_get_buffer(new_data, &bufinfo, MP_BUFFER_READ)) {
+        // construct array from raw bytes
+        size_t sz = mp_binary_get_size('@', BYTEARRAY_TYPECODE, NULL);
+        if (bufinfo.len % sz) {
+            mp_raise_ValueError(MP_ERROR_TEXT("bytes length not a multiple of item size"));
+        }
+        //size_t len = bufinfo.len / sz;
+	}
+    self->base.type = &comSoh_type;
+
+	uint8_t* dest = (uint8_t*)self;
+	dest+= sizeof(mp_obj_base_t);
+	size_t n =  sizeof(mp_float_t) + 3*sizeof(mp_int_t) + 3*sizeof(mp_uint_t);
+	memcpy(dest, bufinfo.buf, n);
+	bufinfo.buf+=n;
+	self->location = copy_to_np_array(self->location, bufinfo.buf, 3, sizeof(float));
+	dest+= sizeof(ndarray_obj_t*);//3 *sizeof(float);
+	bufinfo.buf+= 3*sizeof(float);
+	//memcpy(dest, bufinfo.buf, 2*sizeof(float));
+	memcpy(&self->sys_time, bufinfo.buf, sizeof(float));
+	bufinfo.buf+= sizeof(float);
+	memcpy(&self->timestamp, bufinfo.buf, sizeof(float));
+
+	return MP_OBJ_FROM_PTR(self);	
+
+}
+
+
+
+MP_DEFINE_CONST_FUN_OBJ_1(comSoh_get_bytes_obj, comSoh_get_bytes);
+MP_DEFINE_CONST_FUN_OBJ_2(comSoh_from_bytes_obj, comSoh_from_bytes);
+STATIC const mp_rom_map_elem_t comSoh_locals_dict_table[] = {
+    { MP_ROM_QSTR(MP_QSTR_get_bytes), MP_ROM_PTR(&comSoh_get_bytes_obj) },
+    { MP_ROM_QSTR(MP_QSTR_from_bytes), MP_ROM_PTR(&comSoh_from_bytes_obj) }
+};
+STATIC MP_DEFINE_CONST_DICT(comSoh_locals_dict, comSoh_locals_dict_table);
+
+
 /*
 //define object with one parameter
 MP_DEFINE_CONST_FUN_OBJ_1(comSoh_rssi_obj, comSoh_rssi);
@@ -1388,7 +1646,7 @@ const mp_obj_type_t comSoh_type = {
     .name = MP_QSTR_comSoh,
     .make_new = comSoh_make_new,
     .attr = comSoh_attr,
-   // .locals_dict = (mp_obj_dict_t*)&comSoh_locals_dict,
+    .locals_dict = (mp_obj_dict_t*)&comSoh_locals_dict,
 	.print = comSoh_print,
 };
 
