@@ -341,3 +341,24 @@
 [submodule "lib/certificates"]
 	path = lib/certificates
 	url = https://github.com/adafruit/certificates
+[submodule "frozen/SierraLobo_CircuitPython_MC3419"]
+	path = frozen/SierraLobo_CircuitPython_MC3419
+	url = https://github.com/Sierra-Lobo/SierraLobo_CircuitPython_MC3419
+[submodule "frozen/adcs"]
+	path = frozen/adcs
+	url = https://github.com/Sierra-Lobo/adcs-restructure
+[submodule "frozen/Adafruit_CircuitPython_MMC56x3"]
+	path = frozen/Adafruit_CircuitPython_MMC56x3
+	url = https://github.com/Sierra-Lobo/Adafruit_CircuitPython_MMC56x3
+[submodule "frozen/SierraLobo_CircuitPython_IAM20380"]
+	path = frozen/SierraLobo_CircuitPython_IAM20380
+	url = https://github.com/Sierra-Lobo/SierraLobo_CircuitPython_IAM20380
+[submodule "frozen/SierraLobo_CircuitPython_DS134x"]
+	path = frozen/SierraLobo_CircuitPython_DS134x
+	url = https://github.com/Sierra-Lobo/SierraLobo_CircuitPython_DS134x
+[submodule "frozen/SierraLobo_CircuitPython_INA230"]
+	path = frozen/SierraLobo_CircuitPython_INA230
+	url = https://github.com/Sierra-Lobo/SierraLobo_CircuitPython_INA230
+[submodule "src/lib/frozen/pycubed_rfm9x"]
+	path = src/lib/frozen/pycubed_rfm9x
+	url = https://github.com/Sierra-Lobo/library_pycubed_rfm9x.py
