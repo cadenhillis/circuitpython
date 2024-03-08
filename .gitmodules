@@ -355,3 +355,6 @@
 [submodule "frozen/Adafruit_CircuitPython_RockBlock"]
 	path = frozen/Adafruit_CircuitPython_RockBlock
 	url = git@github.com:adafruit/Adafruit_CircuitPython_RockBlock.git
+[submodule "frozen/SierraLobo_CircuitPython_MC3419"]
+	path = frozen/SierraLobo_CircuitPython_MC3419
+	url = https://github.com/Sierra-Lobo/SierraLobo_CircuitPython_MC3419
