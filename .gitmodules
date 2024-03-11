@@ -358,3 +358,18 @@
 [submodule "frozen/SierraLobo_CircuitPython_MC3419"]
 	path = frozen/SierraLobo_CircuitPython_MC3419
 	url = https://github.com/Sierra-Lobo/SierraLobo_CircuitPython_MC3419
+[submodule "frozen/SierraLobo_CircuitPython_IAM20380"]
+	path = frozen/SierraLobo_CircuitPython_IAM20380
+	url = https://github.com/Sierra-Lobo/SierraLobo_CircuitPython_IAM20380
+[submodule "frozen/SierraLobo_CircuitPython_INA230"]
+	path = frozen/SierraLobo_CircuitPython_INA230
+	url = https://github.com/Sierra-Lobo/SierraLobo_CircuitPython_INA230
+[submodule "frozen/SierraLobo_CircuitPython_DS134x"]
+	path = frozen/SierraLobo_CircuitPython_DS134x
+	url = https://github.com/Sierra-Lobo/SierraLobo_CircuitPython_DS134x
+[submodule "frozen/Adafruit_CircuitPython_MMC56x3"]
+	path = frozen/Adafruit_CircuitPython_MMC56x3
+	url = https://github.com/Sierra-Lobo/Adafruit_CircuitPython_MMC56x3
+[submodule "frozen/mtdb"]
+	path = frozen/mtdb
+	url = https://github.com/Sierra-Lobo/mtdb-circuitpython

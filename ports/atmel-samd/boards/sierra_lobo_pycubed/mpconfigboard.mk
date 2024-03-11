@@ -13,7 +13,7 @@ LONGINT_IMPL = MPZ
 
 CIRCUITPY_FULL_BUILD = 1
 
-CIRCUITPY_ASYNCIO = 1
+#CIRCUITPY_ASYNCIO = 1
 CIRCUITPY_ATEXIT = 1
 CIRCUITPY_OS_GETENV = 1
 CIRCUITPY_TRACEBACK = 1
@@ -53,9 +53,13 @@ CIRCUITPY_ROTARYIO = 0
 CIRCUITPY_COUNTIO = 0
 CIRCUITPY_GIFIO = 0
 
+FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_GPS
 FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_NeoPixel
 FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_Register
 FROZEN_MPY_DIRS += $(TOP)/frozen/adcs
-FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_GPS
+FROZEN_MPY_DIRS += $(TOP)/frozen/SierraLobo_CircuitPython_DS134x
+FROZEN_MPY_DIRS += $(TOP)/frozen/SierraLobo_CircuitPython_IAM20380
+FROZEN_MPY_DIRS += $(TOP)/frozen/SierraLobo_CircuitPython_INA230
+FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_MMC56x3
+FROZEN_MPY_DIRS += $(TOP)/frozen/mtdb
 FROZEN_MPY_DIRS += $(TOP)/frozen/pycubed_rfm9x
-FROZEN_MPY_DIRS += $(TOP)/frozen/Adafruit_CircuitPython_RockBlock
