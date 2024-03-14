@@ -349,9 +349,6 @@
 	path = frozen/adcs 
 	url = https://github.com/Sierra-Lobo/adcs-restructure.git
 	branch = frozen
-[submodule "frozen/pycubed_rfm9x"]
-	path = frozen/pycubed_rfm9x
-	url = https://github.com/adafruit/Adafruit_CircuitPython_RFM9x.git
 [submodule "frozen/Adafruit_CircuitPython_RockBlock"]
 	path = frozen/Adafruit_CircuitPython_RockBlock
 	url = https://github.com/adafruit/Adafruit_CircuitPython_RockBlock.git
@@ -371,5 +368,8 @@
 	path = frozen/Adafruit_CircuitPython_MMC56x3
 	url = https://github.com/Sierra-Lobo/Adafruit_CircuitPython_MMC56x3
 [submodule "frozen/mtdb"]
-	path = frozen/mtdb
+	path = frozen/SierraLobo_MTDB
 	url = https://github.com/Sierra-Lobo/mtdb-circuitpython
+[submodule "frozen/pycubed_rfm9x"]
+	path = frozen/pycubed_rfm9x
+	url = https://github.com/Sierra-Lobo/library_pycubed_rfm9x.py
