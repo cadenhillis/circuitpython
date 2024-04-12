@@ -135,9 +135,9 @@ CFLAGS += \
 	-msoft-float \
 	-mfloat-abi=soft \
 	-DSAMD21
-LIBS := libs/libgcc-12.1.0-Os-v6-m-nofp.a -lc
+LIBS := libs/libgcc-12.1.0-Os-v6-m-nofp.a -lc -lm
 else
-LIBS := -lgcc -lc
+LIBS := -lgcc -lc -lm 
 endif
 ifeq ($(CHIP_FAMILY), samd51)
 CFLAGS += \
@@ -370,7 +370,7 @@ else
 $(BUILD)/firmware.elf: $(OBJ) $(GENERATED_LD_FILE)
 	$(STEPECHO) "LINK $@ $(CC)"
 	$(Q)echo $(OBJ) > $(BUILD)/firmware.objs
-	$(Q)$(CC) -o $@ $(LDFLAGS) @$(BUILD)/firmware.objs -Wl,--print-memory-usage -Wl,--start-group $(LIBS) -Wl,--end-group
+	$(Q)$(CC) -o $@ $(LDFLAGS) @$(BUILD)/firmware.objs -Wl,--print-memory-usage -Wl,--start-group $(LIBS) -Wl,--end-group -lm
 	$(Q)$(SIZE) $@ | $(PYTHON) $(TOP)/tools/build_memory_info.py $(GENERATED_LD_FILE) $(BUILD)
 endif
 
